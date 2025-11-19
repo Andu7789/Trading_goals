@@ -722,4 +722,75 @@ function closeModal(modalId) {
     modal.classList.remove('active');
 }
 
+// Import/Export Data
+function exportData() {
+    const data = {
+        challenges,
+        payouts,
+        balanceHistory,
+        exportDate: new Date().toISOString(),
+        version: '1.0'
+    };
+
+    const dataStr = JSON.stringify(data, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `trading-goals-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    alert('Data exported successfully! Save this file to import on another device.');
+}
+
+function importData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+
+            // Validate data structure
+            if (!data.challenges || !data.payouts || !data.balanceHistory) {
+                throw new Error('Invalid data format');
+            }
+
+            // Ask for confirmation before overwriting
+            const confirmMsg = `This will replace all current data with the imported data.\n\nImported data contains:\n- ${data.challenges.length} challenges\n- ${data.payouts.length} payouts\n- Exported on: ${new Date(data.exportDate).toLocaleString()}\n\nDo you want to continue?`;
+
+            if (!confirm(confirmMsg)) {
+                event.target.value = ''; // Reset file input
+                return;
+            }
+
+            // Import data
+            challenges = data.challenges;
+            payouts = data.payouts;
+            balanceHistory = data.balanceHistory;
+
+            // Save to localStorage
+            saveData();
+
+            // Update UI
+            updateDashboard();
+            renderChallenges();
+            renderPayouts();
+
+            alert('Data imported successfully!');
+            event.target.value = ''; // Reset file input
+        } catch (error) {
+            alert('Error importing data: ' + error.message + '\n\nPlease make sure you selected a valid backup file.');
+            event.target.value = ''; // Reset file input
+        }
+    };
+
+    reader.readAsText(file);
+}
+
 // Note: Modals only close via buttons or ESC key, not by clicking outside

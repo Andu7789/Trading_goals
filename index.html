@@ -11,8 +11,17 @@
     <div class="container">
         <!-- Header Section -->
         <header class="header">
-            <h1>🎯 Forex Trading Goal Tracker</h1>
-            <p class="tagline">Your Journey to £50,000 in Payouts</p>
+            <div class="header-content">
+                <div>
+                    <h1>🎯 Forex Trading Goal Tracker</h1>
+                    <p class="tagline">Your Journey to £50,000 in Payouts</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary btn-small" onclick="exportData()">📥 Export Data</button>
+                    <button class="btn btn-secondary btn-small" onclick="document.getElementById('importFile').click()">📤 Import Data</button>
+                    <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
+                </div>
+            </div>
         </header>
 
         <!-- Main Goal Progress Section -->

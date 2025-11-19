@@ -58,6 +58,22 @@ body {
     font-weight: 300;
 }
 
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.header-actions .btn {
+    white-space: nowrap;
+}
+
 /* Goal Section */
 .goal-section {
     margin-bottom: 30px;
@@ -755,6 +771,20 @@ body {
 @media (max-width: 768px) {
     .header h1 {
         font-size: 1.8rem;
+    }
+
+    .header-content {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .header-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .header-actions .btn {
+        width: 100%;
     }
 
     .goal-amount {
