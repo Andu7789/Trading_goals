@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forex Trading Goal Tracker - £50,000 Journey</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <header class="header">
+            <h1>🎯 Forex Trading Goal Tracker</h1>
+            <p class="tagline">Your Journey to £50,000 in Payouts</p>
+        </header>
+
+        <!-- Main Goal Progress Section -->
+        <section class="goal-section">
+            <div class="goal-card">
+                <h2>Overall Goal Progress</h2>
+                <div class="goal-amount">
+                    <span class="current-amount" id="totalPayouts">£0</span>
+                    <span class="goal-amount-text">/ £50,000</span>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                <div class="progress-stats">
+                    <div class="stat">
+                        <span class="stat-label">Progress</span>
+                        <span class="stat-value" id="progressPercent">0%</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Remaining</span>
+                        <span class="stat-value" id="remaining">£50,000</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Unrealized Profit</span>
+                        <span class="stat-value positive" id="unrealizedProfit">£0</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Stats Dashboard -->
+        <section class="stats-dashboard">
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-content">
+                    <h3 id="activeChallenges">0</h3>
+                    <p>Active Challenges</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-content">
+                    <h3 id="completedChallenges">0</h3>
+                    <p>Completed Challenges</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">💰</div>
+                <div class="stat-content">
+                    <h3 id="avgPayout">£0</h3>
+                    <p>Avg Payout</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📈</div>
+                <div class="stat-content">
+                    <h3 id="successRate">0%</h3>
+                    <p>Success Rate</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Section -->
+        <section class="charts-section">
+            <div class="chart-card">
+                <h3>Payout History</h3>
+                <canvas id="payoutChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>Challenge Balance Trends</h3>
+                <canvas id="balanceChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Challenge Accounts Section -->
+        <section class="challenges-section">
+            <div class="section-header">
+                <h2>Challenge Accounts</h2>
+                <button class="btn btn-primary" onclick="showAddChallengeModal()">+ Add Challenge</button>
+            </div>
+            <div class="challenges-grid" id="challengesGrid">
+                <div class="empty-state">
+                    <p>No challenges yet. Add your first challenge to start tracking!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Payout History Section -->
+        <section class="payouts-section">
+            <div class="section-header">
+                <h2>Payout History</h2>
+                <button class="btn btn-primary" onclick="showAddPayoutModal()">+ Record Payout</button>
+            </div>
+            <div class="payouts-list" id="payoutsList">
+                <div class="empty-state">
+                    <p>No payouts recorded yet. Record your first payout to track your progress!</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Add Challenge Modal -->
+    <div class="modal" id="addChallengeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="challengeModalTitle">Add Challenge Account</h3>
+                <button class="close-btn" onclick="closeModal('addChallengeModal')">&times;</button>
+            </div>
+            <form id="challengeForm" onsubmit="saveChallengeAccount(event)">
+                <input type="hidden" id="challengeId">
+                <div class="form-group">
+                    <label for="challengeName">Challenge Name *</label>
+                    <input type="text" id="challengeName" required placeholder="e.g., FTMO 100K Phase 1">
+                </div>
+                <div class="form-group">
+                    <label for="challengeProvider">Provider</label>
+                    <input type="text" id="challengeProvider" placeholder="e.g., FTMO, MyForexFunds">
+                </div>
+                <div class="form-group">
+                    <label for="initialBalance">Initial Balance (£) *</label>
+                    <input type="number" id="initialBalance" required min="0" step="0.01" placeholder="10000">
+                </div>
+                <div class="form-group">
+                    <label for="currentBalance">Current Balance (£) *</label>
+                    <input type="number" id="currentBalance" required min="0" step="0.01" placeholder="10000">
+                </div>
+                <div class="form-group">
+                    <label for="challengeStatus">Status *</label>
+                    <select id="challengeStatus" required>
+                        <option value="active">Active</option>
+                        <option value="passed">Passed</option>
+                        <option value="failed">Failed</option>
+                        <option value="funded">Funded</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="startDate">Start Date</label>
+                    <input type="date" id="startDate">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addChallengeModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Challenge</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Balance Entry Modal -->
+    <div class="modal" id="addBalanceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Record Balance</h3>
+                <button class="close-btn" onclick="closeModal('addBalanceModal')">&times;</button>
+            </div>
+            <form id="balanceForm" onsubmit="saveBalanceEntry(event)">
+                <input type="hidden" id="balanceChallengeId">
+                <div class="form-group">
+                    <label for="balanceDate">Date *</label>
+                    <input type="date" id="balanceDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="balanceAmount">Balance (£) *</label>
+                    <input type="number" id="balanceAmount" required min="0" step="0.01" placeholder="10500">
+                </div>
+                <div class="form-group">
+                    <label for="balanceNotes">Notes</label>
+                    <textarea id="balanceNotes" rows="3" placeholder="Optional notes about this entry..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addBalanceModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Balance</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Payout Modal -->
+    <div class="modal" id="addPayoutModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Record Payout</h3>
+                <button class="close-btn" onclick="closeModal('addPayoutModal')">&times;</button>
+            </div>
+            <form id="payoutForm" onsubmit="savePayout(event)">
+                <div class="form-group">
+                    <label for="payoutAmount">Payout Amount (£) *</label>
+                    <input type="number" id="payoutAmount" required min="0" step="0.01" placeholder="2500">
+                </div>
+                <div class="form-group">
+                    <label for="payoutDate">Date *</label>
+                    <input type="date" id="payoutDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="payoutSource">Source</label>
+                    <input type="text" id="payoutSource" placeholder="e.g., FTMO Account">
+                </div>
+                <div class="form-group">
+                    <label for="payoutNotes">Notes</label>
+                    <textarea id="payoutNotes" rows="3" placeholder="Optional notes..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addPayoutModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Payout</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Challenge Detail Modal -->
+    <div class="modal" id="challengeDetailModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="challengeDetailTitle">Challenge Details</h3>
+                <button class="close-btn" onclick="closeModal('challengeDetailModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="challenge-detail-stats">
+                    <div class="detail-stat-card">
+                        <div class="detail-stat-label">Current Balance</div>
+                        <div class="detail-stat-value" id="detailCurrentBalance">£0</div>
+                    </div>
+                    <div class="detail-stat-card">
+                        <div class="detail-stat-label">Initial Balance</div>
+                        <div class="detail-stat-value" id="detailInitialBalance">£0</div>
+                    </div>
+                    <div class="detail-stat-card">
+                        <div class="detail-stat-label">Profit/Loss</div>
+                        <div class="detail-stat-value" id="detailProfitLoss">£0</div>
+                    </div>
+                    <div class="detail-stat-card">
+                        <div class="detail-stat-label">Return</div>
+                        <div class="detail-stat-value" id="detailReturn">0%</div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h4>Balance History</h4>
+                    <canvas id="challengeDetailChart"></canvas>
+                </div>
+
+                <div class="balance-history-section">
+                    <div class="section-header">
+                        <h4>Balance Entries</h4>
+                        <button class="btn btn-primary btn-small" onclick="showBalanceModalFromDetail()">+ Add Entry</button>
+                    </div>
+                    <div class="balance-history-list" id="balanceHistoryList">
+                        <div class="empty-state">No balance entries yet.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
