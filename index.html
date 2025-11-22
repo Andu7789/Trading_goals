@@ -17,9 +17,16 @@
                     <p class="tagline">Your Journey to £50,000 in Payouts</p>
                 </div>
                 <div class="header-actions">
-                    <button class="btn btn-secondary btn-small" onclick="exportData()">📥 Export Data</button>
-                    <button class="btn btn-secondary btn-small" onclick="document.getElementById('importFile').click()">📤 Import Data</button>
+                    <button class="btn btn-secondary btn-small" id="syncButton" onclick="toggleSyncMenu()">☁️ Sync</button>
+                    <button class="btn btn-secondary btn-small" onclick="exportData()">📥 Export</button>
+                    <button class="btn btn-secondary btn-small" onclick="document.getElementById('importFile').click()">📤 Import</button>
                     <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
+                </div>
+                <div class="sync-menu" id="syncMenu" style="display: none;">
+                    <button class="sync-menu-item" onclick="showGitHubSetup()">⚙️ Setup GitHub Sync</button>
+                    <button class="sync-menu-item" onclick="syncToCloud()" id="syncToCloudBtn" disabled>↑ Push to Cloud</button>
+                    <button class="sync-menu-item" onclick="syncFromCloud()" id="syncFromCloudBtn" disabled>↓ Pull from Cloud</button>
+                    <button class="sync-menu-item" onclick="disconnectGitHub()" id="disconnectBtn" disabled>🔌 Disconnect</button>
                 </div>
             </div>
         </header>
@@ -374,6 +381,41 @@
                         <div class="empty-state">No R entries yet.</div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GitHub Sync Setup Modal -->
+    <div class="modal" id="githubSetupModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Setup GitHub Cloud Sync</h3>
+                <button class="close-btn" onclick="closeModal('githubSetupModal')">&times;</button>
+            </div>
+            <div style="padding: 25px;">
+                <div class="info-box">
+                    <h4>How to get your GitHub Token:</h4>
+                    <ol>
+                        <li>Go to <a href="https://github.com/settings/tokens" target="_blank">GitHub Settings → Developer settings → Personal access tokens</a></li>
+                        <li>Click "Generate new token (classic)"</li>
+                        <li>Give it a name (e.g., "Trading Goals Sync")</li>
+                        <li>Select scope: <strong>gist</strong></li>
+                        <li>Click "Generate token" and copy it</li>
+                    </ol>
+                </div>
+                <form id="githubSetupForm" onsubmit="saveGitHubToken(event)">
+                    <div class="form-group">
+                        <label for="githubToken">GitHub Personal Access Token *</label>
+                        <input type="password" id="githubToken" required placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+                        <small style="color: var(--text-secondary); display: block; margin-top: 5px;">
+                            Your token is stored locally and never shared
+                        </small>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('githubSetupModal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save & Connect</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

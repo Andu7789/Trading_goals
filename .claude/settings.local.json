@@ -3,7 +3,8 @@
     "allow": [
       "Bash(git add:*)",
       "Bash(git commit -m \"$(cat <<''EOF''\nAdd R-Multiple Goal Tracker with visual progress\n\n- Prominent R-Multiple tracker section at top of page\n- Track progress toward 20R goal with visual display (20R | current)\n- Add/subtract R values with positive/negative support\n- Real-time progress bar showing % to goal\n- Mini chart showing cumulative R over time\n- History modal with detailed stats and full chart\n- Track win rate and total entries\n- Delete individual R entries\n- Beautiful gradient design with animations\n- Responsive layout for mobile\n- Data persists in localStorage and exports/imports\n\nThis helps traders track their R-Multiple performance and progress toward trading goals.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nAdd GitHub Gist cloud sync functionality\n\n- Add cloud sync button with dropdown menu\n- Setup GitHub Personal Access Token authentication\n- Push data to private GitHub Gist (create or update)\n- Pull data from cloud to sync across devices\n- Visual indicator when sync is connected (green checkmark)\n- Disconnect option to remove GitHub credentials\n- Step-by-step setup instructions in modal\n- Stores token and gist ID in localStorage\n- Version 1.2 with sync metadata\n- Includes all data: challenges, payouts, balance history, R entries\n\nThis allows seamless data synchronization across multiple devices without manual export/import.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []

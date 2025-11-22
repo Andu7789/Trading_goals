@@ -17,15 +17,21 @@ let rHistoryChart = null;
 // Current challenge being viewed
 let currentChallengeId = null;
 
+// GitHub Sync
+let githubToken = null;
+let gistId = null;
+
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
     loadData();
+    loadGitHubConfig();
     initCharts();
     updateDashboard();
     updateRTracker();
     renderChallenges();
     renderPayouts();
     setDefaultDates();
+    updateSyncButtonState();
 });
 
 // Local Storage Management
@@ -1095,6 +1101,230 @@ function deleteREntry(entryId) {
     updateRHistoryStats();
     updateRHistoryChart();
     renderREntries();
+}
+
+// GitHub Gist Cloud Sync
+function loadGitHubConfig() {
+    const savedToken = localStorage.getItem('githubToken');
+    const savedGistId = localStorage.getItem('gistId');
+
+    if (savedToken) githubToken = savedToken;
+    if (savedGistId) gistId = savedGistId;
+}
+
+function saveGitHubConfig() {
+    if (githubToken) {
+        localStorage.setItem('githubToken', githubToken);
+    }
+    if (gistId) {
+        localStorage.setItem('gistId', gistId);
+    }
+}
+
+function toggleSyncMenu() {
+    const menu = document.getElementById('syncMenu');
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+
+// Close sync menu when clicking outside
+document.addEventListener('click', (event) => {
+    const menu = document.getElementById('syncMenu');
+    const button = document.getElementById('syncButton');
+
+    if (menu && button && !menu.contains(event.target) && !button.contains(event.target)) {
+        menu.style.display = 'none';
+    }
+});
+
+function showGitHubSetup() {
+    toggleSyncMenu();
+    document.getElementById('githubToken').value = '';
+    document.getElementById('githubSetupModal').classList.add('active');
+}
+
+function saveGitHubToken(event) {
+    event.preventDefault();
+
+    const token = document.getElementById('githubToken').value.trim();
+
+    if (!token) {
+        alert('Please enter a GitHub token');
+        return;
+    }
+
+    githubToken = token;
+    saveGitHubConfig();
+    updateSyncButtonState();
+    closeModal('githubSetupModal');
+
+    alert('GitHub token saved! You can now sync your data to the cloud.');
+}
+
+function updateSyncButtonState() {
+    const syncToCloudBtn = document.getElementById('syncToCloudBtn');
+    const syncFromCloudBtn = document.getElementById('syncFromCloudBtn');
+    const disconnectBtn = document.getElementById('disconnectBtn');
+    const syncButton = document.getElementById('syncButton');
+
+    if (githubToken) {
+        syncToCloudBtn.disabled = false;
+        syncFromCloudBtn.disabled = false;
+        disconnectBtn.disabled = false;
+        syncButton.textContent = '☁️ Sync ✓';
+        syncButton.style.background = 'rgba(16, 185, 129, 0.2)';
+        syncButton.style.color = '#10b981';
+    } else {
+        syncToCloudBtn.disabled = true;
+        syncFromCloudBtn.disabled = true;
+        disconnectBtn.disabled = true;
+        syncButton.textContent = '☁️ Sync';
+        syncButton.style.background = '';
+        syncButton.style.color = '';
+    }
+}
+
+async function syncToCloud() {
+    if (!githubToken) {
+        alert('Please setup GitHub sync first');
+        return;
+    }
+
+    toggleSyncMenu();
+
+    const data = {
+        challenges,
+        payouts,
+        balanceHistory,
+        rEntries,
+        syncDate: new Date().toISOString(),
+        version: '1.2'
+    };
+
+    try {
+        if (gistId) {
+            // Update existing gist
+            const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `token ${githubToken}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                },
+                body: JSON.stringify({
+                    files: {
+                        'trading-goals-data.json': {
+                            content: JSON.stringify(data, null, 2)
+                        }
+                    }
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to update gist: ${response.statusText}`);
+            }
+
+            alert('✅ Data synced to cloud successfully!');
+        } else {
+            // Create new gist
+            const response = await fetch('https://api.github.com/gists', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `token ${githubToken}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                },
+                body: JSON.stringify({
+                    description: 'Forex Trading Goal Tracker - Cloud Sync Data',
+                    public: false,
+                    files: {
+                        'trading-goals-data.json': {
+                            content: JSON.stringify(data, null, 2)
+                        }
+                    }
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to create gist: ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            gistId = result.id;
+            saveGitHubConfig();
+
+            alert('✅ Data synced to cloud successfully!\n\nYour data is now backed up to a private GitHub Gist.');
+        }
+    } catch (error) {
+        console.error('Sync error:', error);
+        alert('❌ Failed to sync data: ' + error.message + '\n\nPlease check your GitHub token and try again.');
+    }
+}
+
+async function syncFromCloud() {
+    if (!githubToken || !gistId) {
+        alert('No cloud data found. Please push to cloud first.');
+        return;
+    }
+
+    toggleSyncMenu();
+
+    try {
+        const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+            headers: {
+                'Authorization': `token ${githubToken}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch gist: ${response.statusText}`);
+        }
+
+        const gist = await response.json();
+        const fileContent = gist.files['trading-goals-data.json'].content;
+        const data = JSON.parse(fileContent);
+
+        // Show confirmation with data info
+        const confirmMsg = `Pull data from cloud?\n\nCloud data contains:\n- ${data.challenges?.length || 0} challenges\n- ${data.payouts?.length || 0} payouts\n- ${data.rEntries?.length || 0} R-Multiple entries\n- Synced: ${new Date(data.syncDate).toLocaleString()}\n\nThis will replace your current local data.`;
+
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+
+        // Import cloud data
+        challenges = data.challenges || [];
+        payouts = data.payouts || [];
+        balanceHistory = data.balanceHistory || {};
+        rEntries = data.rEntries || [];
+
+        // Save to localStorage
+        saveData();
+
+        // Update UI
+        updateDashboard();
+        updateRTracker();
+        renderChallenges();
+        renderPayouts();
+
+        alert('✅ Data pulled from cloud successfully!');
+    } catch (error) {
+        console.error('Sync error:', error);
+        alert('❌ Failed to pull data: ' + error.message + '\n\nPlease check your connection and try again.');
+    }
+}
+
+function disconnectGitHub() {
+    if (!confirm('Disconnect GitHub sync?\n\nYour data will remain in the cloud, but you won\'t be able to sync until you reconnect.')) {
+        return;
+    }
+
+    toggleSyncMenu();
+
+    githubToken = null;
+    gistId = null;
+    localStorage.removeItem('githubToken');
+    localStorage.removeItem('gistId');
+
+    updateSyncButtonState();
+    alert('GitHub sync disconnected.');
 }
 
 // Note: Modals only close via buttons or ESC key, not by clicking outside
