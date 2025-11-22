@@ -1373,13 +1373,20 @@ async function syncFromCloud() {
             gistData = tradingGoalsGist;
         } else {
             // We have a gist ID, fetch it directly
+            console.log('Fetching gist directly:', gistId);
+
             const response = await fetch(`https://api.github.com/gists/${gistId}`, {
                 headers: {
                     'Authorization': `Bearer ${githubToken}`,
                     'Accept': 'application/vnd.github+json',
-                    'X-GitHub-Api-Version': '2022-11-28'
-                }
+                    'X-GitHub-Api-Version': '2022-11-28',
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache'
+                },
+                cache: 'no-store'
             });
+
+            console.log('Fetch response:', response.status, response.headers.get('last-modified'));
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
@@ -1387,6 +1394,7 @@ async function syncFromCloud() {
             }
 
             gistData = await response.json();
+            console.log('Gist last updated:', gistData.updated_at);
         }
 
         const fileContent = gistData.files['trading-goals-data.json'].content;
