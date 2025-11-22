@@ -1226,12 +1226,21 @@ async function syncToCloud() {
     try {
         if (gistId) {
             // Update existing gist
+            console.log('Updating gist:', gistId);
+            console.log('Data to sync:', {
+                challenges: data.challenges.length,
+                payouts: data.payouts.length,
+                rEntries: data.rEntries.length,
+                syncDate: data.syncDate
+            });
+
             const response = await fetch(`https://api.github.com/gists/${gistId}`, {
                 method: 'PATCH',
                 headers: {
                     'Authorization': `Bearer ${githubToken}`,
                     'Accept': 'application/vnd.github+json',
-                    'X-GitHub-Api-Version': '2022-11-28'
+                    'X-GitHub-Api-Version': '2022-11-28',
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     files: {
@@ -1242,12 +1251,18 @@ async function syncToCloud() {
                 })
             });
 
+            console.log('Update response:', response.status, response.statusText);
+
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
+                console.error('Update failed:', errorData);
                 throw new Error(`Failed to update gist: ${errorData.message || response.statusText}`);
             }
 
-            alert('✅ Data synced to cloud successfully!');
+            const result = await response.json();
+            console.log('Gist updated successfully:', result.updated_at);
+
+            alert(`✅ Data synced to cloud successfully!\n\nSynced:\n- ${data.challenges.length} challenges\n- ${data.payouts.length} payouts\n- ${data.rEntries.length} R entries`);
         } else {
             // Create new gist
             const requestBody = {
