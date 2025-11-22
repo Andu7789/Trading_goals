@@ -1256,6 +1256,16 @@ async function syncToCloud() {
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 console.error('Update failed:', errorData);
+
+                // If gist not found (404), clear the saved gistId and create a new one
+                if (response.status === 404) {
+                    console.log('Gist not found (was it deleted?), creating a new one...');
+                    gistId = null;
+                    localStorage.removeItem('gistId');
+                    // Retry the sync, which will create a new gist since gistId is now null
+                    return syncToCloud();
+                }
+
                 throw new Error(`Failed to update gist: ${errorData.message || response.statusText}`);
             }
 
