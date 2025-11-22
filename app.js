@@ -1308,29 +1308,66 @@ async function syncToCloud() {
 }
 
 async function syncFromCloud() {
-    if (!githubToken || !gistId) {
-        alert('No cloud data found. Please push to cloud first.');
+    if (!githubToken) {
+        alert('Please setup GitHub sync first.');
         return;
     }
 
     toggleSyncMenu();
 
     try {
-        const response = await fetch(`https://api.github.com/gists/${gistId}`, {
-            headers: {
-                'Authorization': `Bearer ${githubToken}`,
-                'Accept': 'application/vnd.github+json',
-                'X-GitHub-Api-Version': '2022-11-28'
-            }
-        });
+        let gistData = null;
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(`Failed to fetch gist: ${errorData.message || response.statusText}`);
+        // If we don't have a gist ID, search for it
+        if (!gistId) {
+            console.log('No gist ID found, searching for Trading Goals gist...');
+
+            const listResponse = await fetch('https://api.github.com/gists', {
+                headers: {
+                    'Authorization': `Bearer ${githubToken}`,
+                    'Accept': 'application/vnd.github+json',
+                    'X-GitHub-Api-Version': '2022-11-28'
+                }
+            });
+
+            if (!listResponse.ok) {
+                throw new Error('Failed to list gists');
+            }
+
+            const gists = await listResponse.json();
+            const tradingGoalsGist = gists.find(g =>
+                g.description === 'Forex Trading Goal Tracker - Cloud Sync Data' &&
+                g.files['trading-goals-data.json']
+            );
+
+            if (!tradingGoalsGist) {
+                alert('❌ No cloud data found.\n\nPlease use "Push to Cloud" from your primary device first to create the backup.');
+                return;
+            }
+
+            console.log('Found gist:', tradingGoalsGist.id);
+            gistId = tradingGoalsGist.id;
+            saveGitHubConfig();
+            gistData = tradingGoalsGist;
+        } else {
+            // We have a gist ID, fetch it directly
+            const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+                headers: {
+                    'Authorization': `Bearer ${githubToken}`,
+                    'Accept': 'application/vnd.github+json',
+                    'X-GitHub-Api-Version': '2022-11-28'
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`Failed to fetch gist: ${errorData.message || response.statusText}`);
+            }
+
+            gistData = await response.json();
         }
 
-        const gist = await response.json();
-        const fileContent = gist.files['trading-goals-data.json'].content;
+        const fileContent = gistData.files['trading-goals-data.json'].content;
         const data = JSON.parse(fileContent);
 
         // Show confirmation with data info
