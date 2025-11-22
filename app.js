@@ -1384,9 +1384,7 @@ async function syncFromCloud() {
             headers: {
                 'Authorization': `Bearer ${githubToken}`,
                 'Accept': 'application/vnd.github+json',
-                'X-GitHub-Api-Version': '2022-11-28',
-                'Cache-Control': 'no-cache, no-store, must-revalidate',
-                'Pragma': 'no-cache'
+                'X-GitHub-Api-Version': '2022-11-28'
             },
             cache: 'no-store'
         });
@@ -1420,10 +1418,6 @@ async function syncFromCloud() {
             console.log('Content is truncated, fetching from raw_url:', file.raw_url);
 
             const rawResponse = await fetch(file.raw_url, {
-                headers: {
-                    'Cache-Control': 'no-cache, no-store, must-revalidate',
-                    'Pragma': 'no-cache'
-                },
                 cache: 'no-store'
             });
 
