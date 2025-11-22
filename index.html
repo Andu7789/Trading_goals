@@ -24,6 +24,34 @@
             </div>
         </header>
 
+        <!-- R-Multiple Tracker Section -->
+        <section class="r-tracker-section">
+            <div class="r-tracker-card">
+                <div class="r-tracker-header">
+                    <h2>R-Multiple Goal Tracker</h2>
+                    <div class="r-goal-display">
+                        <span class="r-goal">20R</span>
+                        <span class="r-separator">|</span>
+                        <span class="r-current" id="rCurrent">0R</span>
+                    </div>
+                </div>
+
+                <div class="r-progress-container">
+                    <div class="r-progress-bar" id="rProgressBar"></div>
+                    <span class="r-progress-text" id="rProgressText">0%</span>
+                </div>
+
+                <div class="r-actions">
+                    <button class="btn btn-primary" onclick="showAddRModal()">+ Add R</button>
+                    <button class="btn btn-secondary" onclick="showRHistoryModal()">View History</button>
+                </div>
+
+                <div class="r-mini-chart">
+                    <canvas id="rMiniChart"></canvas>
+                </div>
+            </div>
+        </section>
+
         <!-- Main Goal Progress Section -->
         <section class="goal-section">
             <div class="goal-card">
@@ -269,6 +297,81 @@
                     </div>
                     <div class="balance-history-list" id="balanceHistoryList">
                         <div class="empty-state">No balance entries yet.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add R-Multiple Modal -->
+    <div class="modal" id="addRModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add R-Multiple Entry</h3>
+                <button class="close-btn" onclick="closeModal('addRModal')">&times;</button>
+            </div>
+            <form id="rForm" onsubmit="saveREntry(event)">
+                <div class="form-group">
+                    <label for="rValue">R Value *</label>
+                    <input type="number" id="rValue" required step="0.1" placeholder="e.g., 2.5 or -1" autofocus>
+                    <small style="color: var(--text-secondary); display: block; margin-top: 5px;">
+                        Enter positive for wins (e.g., 2.5R) or negative for losses (e.g., -1R)
+                    </small>
+                </div>
+                <div class="form-group">
+                    <label for="rDate">Date *</label>
+                    <input type="date" id="rDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="rNotes">Notes</label>
+                    <textarea id="rNotes" rows="3" placeholder="Optional notes about this trade..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addRModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Entry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- R-Multiple History Modal -->
+    <div class="modal" id="rHistoryModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3>R-Multiple History</h3>
+                <button class="close-btn" onclick="closeModal('rHistoryModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="r-history-stats">
+                    <div class="detail-stat-card">
+                        <div class="detail-stat-label">Current Total</div>
+                        <div class="detail-stat-value" id="historyCurrentR">0R</div>
+                    </div>
+                    <div class="detail-stat-card">
+                        <div class="detail-stat-label">Goal</div>
+                        <div class="detail-stat-value">20R</div>
+                    </div>
+                    <div class="detail-stat-card">
+                        <div class="detail-stat-label">Total Entries</div>
+                        <div class="detail-stat-value" id="historyTotalEntries">0</div>
+                    </div>
+                    <div class="detail-stat-card">
+                        <div class="detail-stat-label">Win Rate</div>
+                        <div class="detail-stat-value" id="historyWinRate">0%</div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h4>R-Multiple Progress Over Time</h4>
+                    <canvas id="rHistoryChart"></canvas>
+                </div>
+
+                <div class="balance-history-section">
+                    <div class="section-header">
+                        <h4>All Entries</h4>
+                    </div>
+                    <div class="balance-history-list" id="rEntriesList">
+                        <div class="empty-state">No R entries yet.</div>
                     </div>
                 </div>
             </div>

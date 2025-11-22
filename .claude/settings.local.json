@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nAdd R-Multiple Goal Tracker with visual progress\n\n- Prominent R-Multiple tracker section at top of page\n- Track progress toward 20R goal with visual display (20R | current)\n- Add/subtract R values with positive/negative support\n- Real-time progress bar showing % to goal\n- Mini chart showing cumulative R over time\n- History modal with detailed stats and full chart\n- Track win rate and total entries\n- Delete individual R entries\n- Beautiful gradient design with animations\n- Responsive layout for mobile\n- Data persists in localStorage and exports/imports\n\nThis helps traders track their R-Multiple performance and progress toward trading goals.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

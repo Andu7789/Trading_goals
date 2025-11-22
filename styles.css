@@ -74,6 +74,145 @@ body {
     white-space: nowrap;
 }
 
+/* R-Multiple Tracker Section */
+.r-tracker-section {
+    margin-bottom: 30px;
+}
+
+.r-tracker-card {
+    background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
+    border: 2px solid #4f46e5;
+    border-radius: 20px;
+    padding: 35px;
+    box-shadow: 0 10px 30px rgba(79, 70, 229, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.r-tracker-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at top right, rgba(139, 92, 246, 0.1), transparent 70%);
+    pointer-events: none;
+}
+
+.r-tracker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    position: relative;
+    z-index: 1;
+}
+
+.r-tracker-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #e0e7ff;
+    margin: 0;
+}
+
+.r-goal-display {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-size: 3.5rem;
+    font-weight: 800;
+}
+
+.r-goal {
+    color: #c7d2fe;
+}
+
+.r-separator {
+    color: #6366f1;
+    font-weight: 400;
+}
+
+.r-current {
+    color: #34d399;
+    text-shadow: 0 0 20px rgba(52, 211, 153, 0.5);
+}
+
+.r-current.negative {
+    color: #f87171;
+    text-shadow: 0 0 20px rgba(248, 113, 113, 0.5);
+}
+
+.r-progress-container {
+    height: 50px;
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 25px;
+    overflow: hidden;
+    margin-bottom: 25px;
+    border: 2px solid rgba(99, 102, 241, 0.3);
+    position: relative;
+    z-index: 1;
+}
+
+.r-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #34d399 0%, #10b981 100%);
+    width: 0%;
+    transition: width 0.8s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 20px;
+    font-weight: 700;
+    border-radius: 25px;
+    box-shadow: 0 0 30px rgba(52, 211, 153, 0.5);
+}
+
+.r-progress-bar.negative {
+    background: linear-gradient(90deg, #f87171 0%, #ef4444 100%);
+    box-shadow: 0 0 30px rgba(248, 113, 113, 0.5);
+}
+
+.r-progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.r-actions {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+    position: relative;
+    z-index: 1;
+}
+
+.r-actions .btn {
+    flex: 1;
+}
+
+.r-mini-chart {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 16px;
+    padding: 20px;
+    height: 200px;
+    position: relative;
+    z-index: 1;
+}
+
+.r-history-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
 /* Goal Section */
 .goal-section {
     margin-bottom: 30px;
@@ -785,6 +924,25 @@ body {
 
     .header-actions .btn {
         width: 100%;
+    }
+
+    .r-tracker-header {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+    }
+
+    .r-goal-display {
+        font-size: 2.5rem;
+        justify-content: center;
+    }
+
+    .r-actions {
+        flex-direction: column;
+    }
+
+    .r-mini-chart {
+        height: 150px;
     }
 
     .goal-amount {

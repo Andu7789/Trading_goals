@@ -2,13 +2,17 @@
 let challenges = [];
 let payouts = [];
 let balanceHistory = {};
+let rEntries = [];
 
 const GOAL_AMOUNT = 50000;
+const R_GOAL = 20;
 
 // Charts
 let payoutChart = null;
 let balanceChart = null;
 let challengeDetailChart = null;
+let rMiniChart = null;
+let rHistoryChart = null;
 
 // Current challenge being viewed
 let currentChallengeId = null;
@@ -18,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadData();
     initCharts();
     updateDashboard();
+    updateRTracker();
     renderChallenges();
     renderPayouts();
     setDefaultDates();
@@ -28,16 +33,19 @@ function saveData() {
     localStorage.setItem('challenges', JSON.stringify(challenges));
     localStorage.setItem('payouts', JSON.stringify(payouts));
     localStorage.setItem('balanceHistory', JSON.stringify(balanceHistory));
+    localStorage.setItem('rEntries', JSON.stringify(rEntries));
 }
 
 function loadData() {
     const savedChallenges = localStorage.getItem('challenges');
     const savedPayouts = localStorage.getItem('payouts');
     const savedBalanceHistory = localStorage.getItem('balanceHistory');
+    const savedREntries = localStorage.getItem('rEntries');
 
     if (savedChallenges) challenges = JSON.parse(savedChallenges);
     if (savedPayouts) payouts = JSON.parse(savedPayouts);
     if (savedBalanceHistory) balanceHistory = JSON.parse(savedBalanceHistory);
+    if (savedREntries) rEntries = JSON.parse(savedREntries);
 }
 
 function setDefaultDates() {
@@ -45,10 +53,12 @@ function setDefaultDates() {
     const startDateInput = document.getElementById('startDate');
     const balanceDateInput = document.getElementById('balanceDate');
     const payoutDateInput = document.getElementById('payoutDate');
+    const rDateInput = document.getElementById('rDate');
 
     if (startDateInput) startDateInput.value = today;
     if (balanceDateInput) balanceDateInput.value = today;
     if (payoutDateInput) payoutDateInput.value = today;
+    if (rDateInput) rDateInput.value = today;
 }
 
 // Dashboard Updates
@@ -728,8 +738,9 @@ function exportData() {
         challenges,
         payouts,
         balanceHistory,
+        rEntries,
         exportDate: new Date().toISOString(),
-        version: '1.0'
+        version: '1.1'
     };
 
     const dataStr = JSON.stringify(data, null, 2);
@@ -762,7 +773,8 @@ function importData(event) {
             }
 
             // Ask for confirmation before overwriting
-            const confirmMsg = `This will replace all current data with the imported data.\n\nImported data contains:\n- ${data.challenges.length} challenges\n- ${data.payouts.length} payouts\n- Exported on: ${new Date(data.exportDate).toLocaleString()}\n\nDo you want to continue?`;
+            const rEntriesInfo = data.rEntries ? `\n- ${data.rEntries.length} R-Multiple entries` : '';
+            const confirmMsg = `This will replace all current data with the imported data.\n\nImported data contains:\n- ${data.challenges.length} challenges\n- ${data.payouts.length} payouts${rEntriesInfo}\n- Exported on: ${new Date(data.exportDate).toLocaleString()}\n\nDo you want to continue?`;
 
             if (!confirm(confirmMsg)) {
                 event.target.value = ''; // Reset file input
@@ -773,12 +785,14 @@ function importData(event) {
             challenges = data.challenges;
             payouts = data.payouts;
             balanceHistory = data.balanceHistory;
+            rEntries = data.rEntries || [];
 
             // Save to localStorage
             saveData();
 
             // Update UI
             updateDashboard();
+            updateRTracker();
             renderChallenges();
             renderPayouts();
 
@@ -791,6 +805,296 @@ function importData(event) {
     };
 
     reader.readAsText(file);
+}
+
+// R-Multiple Tracker Functions
+function calculateCurrentR() {
+    return rEntries.reduce((sum, entry) => sum + parseFloat(entry.value), 0);
+}
+
+function updateRTracker() {
+    const currentR = calculateCurrentR();
+    const progress = (currentR / R_GOAL) * 100;
+    const progressCapped = Math.min(Math.max(progress, 0), 100);
+
+    // Update display
+    const rCurrentElement = document.getElementById('rCurrent');
+    rCurrentElement.textContent = `${currentR.toFixed(1)}R`;
+    rCurrentElement.className = currentR >= 0 ? 'r-current' : 'r-current negative';
+
+    // Update progress bar
+    const rProgressBar = document.getElementById('rProgressBar');
+    rProgressBar.style.width = `${progressCapped}%`;
+    rProgressBar.className = currentR >= 0 ? 'r-progress-bar' : 'r-progress-bar negative';
+
+    // Update progress text
+    document.getElementById('rProgressText').textContent = `${progress.toFixed(1)}%`;
+
+    // Update mini chart
+    updateRMiniChart();
+}
+
+function updateRMiniChart() {
+    if (!rMiniChart) {
+        const ctx = document.getElementById('rMiniChart');
+        rMiniChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Cumulative R',
+                    data: [],
+                    borderColor: '#34d399',
+                    backgroundColor: 'rgba(52, 211, 153, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 3,
+                    pointHoverRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        titleColor: '#f1f5f9',
+                        bodyColor: '#f1f5f9',
+                        borderColor: '#4f46e5',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#e0e7ff',
+                            callback: function(value) {
+                                return value + 'R';
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(99, 102, 241, 0.2)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: '#e0e7ff',
+                            maxRotation: 0,
+                            autoSkip: true,
+                            maxTicksLimit: 6
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Calculate cumulative R over time
+    const sortedEntries = [...rEntries].sort((a, b) => new Date(a.date) - new Date(b.date));
+    let cumulative = 0;
+    const labels = [];
+    const data = [];
+
+    sortedEntries.forEach(entry => {
+        cumulative += parseFloat(entry.value);
+        labels.push(formatDate(entry.date));
+        data.push(cumulative);
+    });
+
+    rMiniChart.data.labels = labels;
+    rMiniChart.data.datasets[0].data = data;
+    rMiniChart.data.datasets[0].borderColor = cumulative >= 0 ? '#34d399' : '#f87171';
+    rMiniChart.data.datasets[0].backgroundColor = cumulative >= 0 ? 'rgba(52, 211, 153, 0.1)' : 'rgba(248, 113, 113, 0.1)';
+    rMiniChart.update();
+}
+
+function showAddRModal() {
+    document.getElementById('rForm').reset();
+    setDefaultDates();
+    document.getElementById('addRModal').classList.add('active');
+}
+
+function saveREntry(event) {
+    event.preventDefault();
+
+    const value = parseFloat(document.getElementById('rValue').value);
+    const date = document.getElementById('rDate').value;
+    const notes = document.getElementById('rNotes').value;
+
+    const entry = {
+        id: Date.now().toString(),
+        value,
+        date,
+        notes,
+        timestamp: new Date().toISOString()
+    };
+
+    rEntries.push(entry);
+    rEntries.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    saveData();
+    updateRTracker();
+    closeModal('addRModal');
+}
+
+function showRHistoryModal() {
+    updateRHistoryStats();
+    updateRHistoryChart();
+    renderREntries();
+    document.getElementById('rHistoryModal').classList.add('active');
+}
+
+function updateRHistoryStats() {
+    const currentR = calculateCurrentR();
+    const totalEntries = rEntries.length;
+    const wins = rEntries.filter(e => parseFloat(e.value) > 0).length;
+    const winRate = totalEntries > 0 ? (wins / totalEntries) * 100 : 0;
+
+    document.getElementById('historyCurrentR').textContent = `${currentR.toFixed(1)}R`;
+    document.getElementById('historyCurrentR').className = currentR >= 0 ? 'detail-stat-value positive' : 'detail-stat-value negative';
+    document.getElementById('historyTotalEntries').textContent = totalEntries;
+    document.getElementById('historyWinRate').textContent = `${winRate.toFixed(1)}%`;
+}
+
+function updateRHistoryChart() {
+    const ctx = document.getElementById('rHistoryChart');
+
+    if (rHistoryChart) {
+        rHistoryChart.destroy();
+    }
+
+    const sortedEntries = [...rEntries].sort((a, b) => new Date(a.date) - new Date(b.date));
+    let cumulative = 0;
+    const labels = [];
+    const data = [];
+
+    sortedEntries.forEach(entry => {
+        cumulative += parseFloat(entry.value);
+        labels.push(formatDate(entry.date));
+        data.push(cumulative);
+    });
+
+    // Add goal line
+    if (sortedEntries.length > 0) {
+        labels.unshift('Start');
+        data.unshift(0);
+    }
+
+    rHistoryChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Cumulative R',
+                data: data,
+                borderColor: '#34d399',
+                backgroundColor: 'rgba(52, 211, 153, 0.1)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                pointBackgroundColor: '#34d399',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }, {
+                label: 'Goal (20R)',
+                data: Array(labels.length).fill(R_GOAL),
+                borderColor: '#6366f1',
+                borderDash: [5, 5],
+                fill: false,
+                pointRadius: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#f1f5f9'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: '#1e293b',
+                    titleColor: '#f1f5f9',
+                    bodyColor: '#f1f5f9',
+                    borderColor: '#334155',
+                    borderWidth: 1
+                }
+            },
+            scales: {
+                y: {
+                    ticks: {
+                        color: '#94a3b8',
+                        callback: function(value) {
+                            return value + 'R';
+                        }
+                    },
+                    grid: {
+                        color: '#334155'
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: '#94a3b8',
+                        maxRotation: 45,
+                        minRotation: 45
+                    },
+                    grid: {
+                        color: '#334155'
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderREntries() {
+    const list = document.getElementById('rEntriesList');
+
+    if (rEntries.length === 0) {
+        list.innerHTML = '<div class="empty-state">No R entries yet.</div>';
+        return;
+    }
+
+    const sortedEntries = [...rEntries].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    list.innerHTML = sortedEntries.map(entry => {
+        const value = parseFloat(entry.value);
+        const valueClass = value >= 0 ? 'positive' : 'negative';
+        const valueSign = value >= 0 ? '+' : '';
+
+        return `
+            <div class="balance-entry">
+                <div class="balance-entry-info">
+                    <div class="balance-entry-amount ${valueClass}">${valueSign}${value.toFixed(1)}R</div>
+                    <div class="balance-entry-date">${formatDate(entry.date)}</div>
+                    ${entry.notes ? `<div class="balance-entry-notes">${entry.notes}</div>` : ''}
+                </div>
+                <div class="balance-entry-actions">
+                    <button class="btn btn-danger btn-small" onclick="deleteREntry('${entry.id}')">Delete</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function deleteREntry(entryId) {
+    if (!confirm('Are you sure you want to delete this R entry?')) return;
+
+    rEntries = rEntries.filter(e => e.id !== entryId);
+    saveData();
+    updateRTracker();
+    updateRHistoryStats();
+    updateRHistoryChart();
+    renderREntries();
 }
 
 // Note: Modals only close via buttons or ESC key, not by clicking outside
