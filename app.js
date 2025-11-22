@@ -1370,34 +1370,61 @@ async function syncFromCloud() {
             console.log('Found gist:', tradingGoalsGist.id);
             gistId = tradingGoalsGist.id;
             saveGitHubConfig();
-            gistData = tradingGoalsGist;
-        } else {
-            // We have a gist ID, fetch it directly
-            console.log('Fetching gist directly:', gistId);
+        }
 
-            const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+        // Always fetch the specific gist to get full content (list response may be truncated)
+        console.log('Fetching gist:', gistId);
+
+        const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+            headers: {
+                'Authorization': `Bearer ${githubToken}`,
+                'Accept': 'application/vnd.github+json',
+                'X-GitHub-Api-Version': '2022-11-28',
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache'
+            },
+            cache: 'no-store'
+        });
+
+        console.log('Fetch response:', response.status, response.headers.get('last-modified'));
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(`Failed to fetch gist: ${errorData.message || response.statusText}`);
+        }
+
+        gistData = await response.json();
+        console.log('Gist last updated:', gistData.updated_at);
+
+        // Check if content is truncated (GitHub truncates large files)
+        const file = gistData.files['trading-goals-data.json'];
+        let fileContent;
+
+        if (file.truncated) {
+            // Content is truncated, fetch from raw_url
+            console.log('Content is truncated, fetching from raw_url:', file.raw_url);
+
+            const rawResponse = await fetch(file.raw_url, {
                 headers: {
                     'Authorization': `Bearer ${githubToken}`,
-                    'Accept': 'application/vnd.github+json',
-                    'X-GitHub-Api-Version': '2022-11-28',
                     'Cache-Control': 'no-cache, no-store, must-revalidate',
                     'Pragma': 'no-cache'
                 },
                 cache: 'no-store'
             });
 
-            console.log('Fetch response:', response.status, response.headers.get('last-modified'));
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(`Failed to fetch gist: ${errorData.message || response.statusText}`);
+            if (!rawResponse.ok) {
+                throw new Error(`Failed to fetch raw content: ${rawResponse.statusText}`);
             }
 
-            gistData = await response.json();
-            console.log('Gist last updated:', gistData.updated_at);
+            fileContent = await rawResponse.text();
+            console.log('Fetched full content from raw_url, size:', fileContent.length);
+        } else {
+            // Content is not truncated, use it directly
+            fileContent = file.content;
+            console.log('Using content directly, size:', fileContent.length);
         }
 
-        const fileContent = gistData.files['trading-goals-data.json'].content;
         const data = JSON.parse(fileContent);
 
         console.log('Pulled data from cloud:', {
