@@ -1330,18 +1330,25 @@ async function syncFromCloud() {
                 }
             });
 
+            console.log('List gists response:', listResponse.status);
+
             if (!listResponse.ok) {
-                throw new Error('Failed to list gists');
+                const errorData = await listResponse.json().catch(() => ({}));
+                console.error('Failed to list gists:', errorData);
+                throw new Error('Failed to list gists: ' + (errorData.message || listResponse.statusText));
             }
 
             const gists = await listResponse.json();
+            console.log('Found gists:', gists.length, 'total');
+            console.log('Gist descriptions:', gists.map(g => ({ desc: g.description, files: Object.keys(g.files) })));
+
             const tradingGoalsGist = gists.find(g =>
                 g.description === 'Forex Trading Goal Tracker - Cloud Sync Data' &&
                 g.files['trading-goals-data.json']
             );
 
             if (!tradingGoalsGist) {
-                alert('❌ No cloud data found.\n\nPlease use "Push to Cloud" from your primary device first to create the backup.');
+                alert(`❌ No cloud data found.\n\nSearched ${gists.length} gists but couldn't find "Forex Trading Goal Tracker - Cloud Sync Data".\n\nPlease use "Push to Cloud" from your primary device first.`);
                 return;
             }
 
