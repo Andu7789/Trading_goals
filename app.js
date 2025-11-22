@@ -1262,7 +1262,7 @@ async function syncToCloud() {
             const result = await response.json();
             console.log('Gist updated successfully:', result.updated_at);
 
-            alert(`✅ Data synced to cloud successfully!\n\nSynced:\n- ${data.challenges.length} challenges\n- ${data.payouts.length} payouts\n- ${data.rEntries.length} R entries`);
+            alert(`✅ Data synced to cloud successfully!\n\nSynced:\n- ${data.challenges.length} challenges\n- ${data.payouts.length} payouts\n- ${data.rEntries.length} R entries\n\n📋 Gist ID: ${gistId.substring(0, 8)}...`);
         } else {
             // Create new gist
             const requestBody = {
@@ -1314,7 +1314,7 @@ async function syncToCloud() {
             gistId = result.id;
             saveGitHubConfig();
 
-            alert('✅ Data synced to cloud successfully!\n\nYour data is now backed up to a private GitHub Gist.');
+            alert(`✅ Data synced to cloud successfully!\n\nYour data is now backed up to a private GitHub Gist.\n\n📋 Gist ID: ${gistId.substring(0, 8)}...\n\n⚠️ Important: Use "Pull from Cloud" on your other devices to sync this data.`);
         }
     } catch (error) {
         console.error('Sync error:', error);
@@ -1357,17 +1357,28 @@ async function syncFromCloud() {
             console.log('Found gists:', gists.length, 'total');
             console.log('Gist descriptions:', gists.map(g => ({ desc: g.description, files: Object.keys(g.files) })));
 
-            const tradingGoalsGist = gists.find(g =>
+            // Find all matching gists
+            const matchingGists = gists.filter(g =>
                 g.description === 'Forex Trading Goal Tracker - Cloud Sync Data' &&
                 g.files['trading-goals-data.json']
             );
 
-            if (!tradingGoalsGist) {
+            if (matchingGists.length === 0) {
                 alert(`❌ No cloud data found.\n\nSearched ${gists.length} gists but couldn't find "Forex Trading Goal Tracker - Cloud Sync Data".\n\nPlease use "Push to Cloud" from your primary device first.`);
                 return;
             }
 
-            console.log('Found gist:', tradingGoalsGist.id);
+            // Use the most recently updated gist (in case of duplicates)
+            const tradingGoalsGist = matchingGists.sort((a, b) =>
+                new Date(b.updated_at) - new Date(a.updated_at)
+            )[0];
+
+            if (matchingGists.length > 1) {
+                console.warn(`⚠️ Found ${matchingGists.length} duplicate gists! Using the most recent one.`);
+                console.warn('Duplicate gist IDs:', matchingGists.map(g => g.id));
+            }
+
+            console.log('Found gist:', tradingGoalsGist.id, 'updated:', tradingGoalsGist.updated_at);
             gistId = tradingGoalsGist.id;
             saveGitHubConfig();
         }
@@ -1479,7 +1490,7 @@ async function syncFromCloud() {
 
         console.log('UI updated');
 
-        alert(`✅ Data pulled from cloud successfully!\n\nImported:\n- ${data.challenges?.length || 0} challenges\n- ${data.payouts?.length || 0} payouts\n- ${data.rEntries?.length || 0} R entries`);
+        alert(`✅ Data pulled from cloud successfully!\n\nImported:\n- ${data.challenges?.length || 0} challenges\n- ${data.payouts?.length || 0} payouts\n- ${data.rEntries?.length || 0} R entries\n\n📋 Gist ID: ${gistId.substring(0, 8)}...`);
     } catch (error) {
         console.error('Sync error:', error);
         alert('❌ Failed to pull data: ' + error.message + '\n\nPlease check your connection and try again.');
