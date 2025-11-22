@@ -1392,6 +1392,13 @@ async function syncFromCloud() {
         const fileContent = gistData.files['trading-goals-data.json'].content;
         const data = JSON.parse(fileContent);
 
+        console.log('Pulled data from cloud:', {
+            challenges: data.challenges?.length || 0,
+            payouts: data.payouts?.length || 0,
+            rEntries: data.rEntries?.length || 0,
+            syncDate: data.syncDate
+        });
+
         // Show confirmation with data info
         const confirmMsg = `Pull data from cloud?\n\nCloud data contains:\n- ${data.challenges?.length || 0} challenges\n- ${data.payouts?.length || 0} payouts\n- ${data.rEntries?.length || 0} R-Multiple entries\n- Synced: ${new Date(data.syncDate).toLocaleString()}\n\nThis will replace your current local data.`;
 
@@ -1399,14 +1406,27 @@ async function syncFromCloud() {
             return;
         }
 
+        console.log('Before import - current data:', {
+            challenges: challenges.length,
+            payouts: payouts.length,
+            rEntries: rEntries.length
+        });
+
         // Import cloud data
         challenges = data.challenges || [];
         payouts = data.payouts || [];
         balanceHistory = data.balanceHistory || {};
         rEntries = data.rEntries || [];
 
+        console.log('After import - new data:', {
+            challenges: challenges.length,
+            payouts: payouts.length,
+            rEntries: rEntries.length
+        });
+
         // Save to localStorage
         saveData();
+        console.log('Data saved to localStorage');
 
         // Update UI
         updateDashboard();
@@ -1414,7 +1434,9 @@ async function syncFromCloud() {
         renderChallenges();
         renderPayouts();
 
-        alert('✅ Data pulled from cloud successfully!');
+        console.log('UI updated');
+
+        alert(`✅ Data pulled from cloud successfully!\n\nImported:\n- ${data.challenges?.length || 0} challenges\n- ${data.payouts?.length || 0} payouts\n- ${data.rEntries?.length || 0} R entries`);
     } catch (error) {
         console.error('Sync error:', error);
         alert('❌ Failed to pull data: ' + error.message + '\n\nPlease check your connection and try again.');
