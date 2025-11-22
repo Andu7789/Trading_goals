@@ -21,12 +21,12 @@
                     <button class="btn btn-secondary btn-small" onclick="exportData()">📥 Export</button>
                     <button class="btn btn-secondary btn-small" onclick="document.getElementById('importFile').click()">📤 Import</button>
                     <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
-                </div>
-                <div class="sync-menu" id="syncMenu" style="display: none;">
-                    <button class="sync-menu-item" onclick="showGitHubSetup()">⚙️ Setup GitHub Sync</button>
-                    <button class="sync-menu-item" onclick="syncToCloud()" id="syncToCloudBtn" disabled>↑ Push to Cloud</button>
-                    <button class="sync-menu-item" onclick="syncFromCloud()" id="syncFromCloudBtn" disabled>↓ Pull from Cloud</button>
-                    <button class="sync-menu-item" onclick="disconnectGitHub()" id="disconnectBtn" disabled>🔌 Disconnect</button>
+                    <div class="sync-menu" id="syncMenu" style="display: none;">
+                        <button class="sync-menu-item" onclick="showGitHubSetup()">⚙️ Setup GitHub Sync</button>
+                        <button class="sync-menu-item" onclick="syncToCloud()" id="syncToCloudBtn" disabled>↑ Push to Cloud</button>
+                        <button class="sync-menu-item" onclick="syncFromCloud()" id="syncFromCloudBtn" disabled>↓ Pull from Cloud</button>
+                        <button class="sync-menu-item" onclick="disconnectGitHub()" id="disconnectBtn" disabled>🔌 Disconnect</button>
+                    </div>
                 </div>
             </div>
         </header>
@@ -396,12 +396,17 @@
                 <div class="info-box">
                     <h4>How to get your GitHub Token:</h4>
                     <ol>
-                        <li>Go to <a href="https://github.com/settings/tokens" target="_blank">GitHub Settings → Developer settings → Personal access tokens</a></li>
-                        <li>Click "Generate new token (classic)"</li>
+                        <li>Go to <a href="https://github.com/settings/tokens" target="_blank">GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)</a></li>
+                        <li>Click <strong>"Generate new token (classic)"</strong> (NOT fine-grained)</li>
                         <li>Give it a name (e.g., "Trading Goals Sync")</li>
-                        <li>Select scope: <strong>gist</strong></li>
-                        <li>Click "Generate token" and copy it</li>
+                        <li>Select expiration: Choose "No expiration" or custom date</li>
+                        <li>✅ Check ONLY the <strong>"gist"</strong> scope (Create gists)</li>
+                        <li>Scroll down and click "Generate token"</li>
+                        <li>Copy the token immediately (you won't see it again!)</li>
                     </ol>
+                    <p style="margin-top: 15px; color: #fbbf24; font-size: 0.9rem;">
+                        ⚠️ Important: The token starts with "ghp_" and is about 40 characters long.
+                    </p>
                 </div>
                 <form id="githubSetupForm" onsubmit="saveGitHubToken(event)">
                     <div class="form-group">

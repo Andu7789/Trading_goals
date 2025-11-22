@@ -1142,7 +1142,7 @@ function showGitHubSetup() {
     document.getElementById('githubSetupModal').classList.add('active');
 }
 
-function saveGitHubToken(event) {
+async function saveGitHubToken(event) {
     event.preventDefault();
 
     const token = document.getElementById('githubToken').value.trim();
@@ -1152,12 +1152,35 @@ function saveGitHubToken(event) {
         return;
     }
 
-    githubToken = token;
-    saveGitHubConfig();
-    updateSyncButtonState();
-    closeModal('githubSetupModal');
+    // Test the token before saving
+    try {
+        const testResponse = await fetch('https://api.github.com/user', {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.github+json',
+                'X-GitHub-Api-Version': '2022-11-28'
+            }
+        });
 
-    alert('GitHub token saved! You can now sync your data to the cloud.');
+        if (!testResponse.ok) {
+            const errorData = await testResponse.json().catch(() => ({}));
+            alert('❌ Token validation failed: ' + (errorData.message || 'Invalid token') + '\n\nPlease check your token and try again.');
+            return;
+        }
+
+        const userData = await testResponse.json();
+        console.log('GitHub user verified:', userData.login);
+
+        githubToken = token;
+        saveGitHubConfig();
+        updateSyncButtonState();
+        closeModal('githubSetupModal');
+
+        alert('✅ GitHub token saved and verified!\n\nLogged in as: ' + userData.login + '\n\nYou can now sync your data to the cloud.');
+    } catch (error) {
+        console.error('Token validation error:', error);
+        alert('❌ Failed to validate token: ' + error.message + '\n\nPlease check your internet connection and try again.');
+    }
 }
 
 function updateSyncButtonState() {
@@ -1206,8 +1229,9 @@ async function syncToCloud() {
             const response = await fetch(`https://api.github.com/gists/${gistId}`, {
                 method: 'PATCH',
                 headers: {
-                    'Authorization': `token ${githubToken}`,
-                    'Accept': 'application/vnd.github.v3+json'
+                    'Authorization': `Bearer ${githubToken}`,
+                    'Accept': 'application/vnd.github+json',
+                    'X-GitHub-Api-Version': '2022-11-28'
                 },
                 body: JSON.stringify({
                     files: {
@@ -1219,31 +1243,56 @@ async function syncToCloud() {
             });
 
             if (!response.ok) {
-                throw new Error(`Failed to update gist: ${response.statusText}`);
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`Failed to update gist: ${errorData.message || response.statusText}`);
             }
 
             alert('✅ Data synced to cloud successfully!');
         } else {
             // Create new gist
+            const requestBody = {
+                description: 'Forex Trading Goal Tracker - Cloud Sync Data',
+                public: false,
+                files: {
+                    'trading-goals-data.json': {
+                        content: JSON.stringify(data, null, 2)
+                    }
+                }
+            };
+
+            console.log('Creating gist with request:', {
+                url: 'https://api.github.com/gists',
+                method: 'POST',
+                hasToken: !!githubToken,
+                tokenPrefix: githubToken ? githubToken.substring(0, 7) + '...' : 'none',
+                bodySize: JSON.stringify(requestBody).length
+            });
+
             const response = await fetch('https://api.github.com/gists', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `token ${githubToken}`,
-                    'Accept': 'application/vnd.github.v3+json'
+                    'Authorization': `Bearer ${githubToken}`,
+                    'Accept': 'application/vnd.github+json',
+                    'X-GitHub-Api-Version': '2022-11-28',
+                    'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    description: 'Forex Trading Goal Tracker - Cloud Sync Data',
-                    public: false,
-                    files: {
-                        'trading-goals-data.json': {
-                            content: JSON.stringify(data, null, 2)
-                        }
-                    }
-                })
+                body: JSON.stringify(requestBody)
             });
 
+            console.log('Response status:', response.status, response.statusText);
+
             if (!response.ok) {
-                throw new Error(`Failed to create gist: ${response.statusText}`);
+                const errorData = await response.json().catch(() => ({}));
+                console.error('GitHub API Error:', errorData);
+                console.error('Response headers:', [...response.headers.entries()]);
+
+                let errorMsg = `Failed to create gist: ${errorData.message || response.statusText}`;
+                if (errorData.message === 'Bad credentials') {
+                    errorMsg += '\n\n⚠️ Your GitHub token appears to be invalid or expired.\n\nPlease check:\n1. Token was copied correctly (no extra spaces)\n2. Token has "gist" permission\n3. Token has not expired';
+                } else if (errorData.documentation_url) {
+                    errorMsg += '\n\nSee: ' + errorData.documentation_url;
+                }
+                throw new Error(errorMsg);
             }
 
             const result = await response.json();
@@ -1269,13 +1318,15 @@ async function syncFromCloud() {
     try {
         const response = await fetch(`https://api.github.com/gists/${gistId}`, {
             headers: {
-                'Authorization': `token ${githubToken}`,
-                'Accept': 'application/vnd.github.v3+json'
+                'Authorization': `Bearer ${githubToken}`,
+                'Accept': 'application/vnd.github+json',
+                'X-GitHub-Api-Version': '2022-11-28'
             }
         });
 
         if (!response.ok) {
-            throw new Error(`Failed to fetch gist: ${response.statusText}`);
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(`Failed to fetch gist: ${errorData.message || response.statusText}`);
         }
 
         const gist = await response.json();
