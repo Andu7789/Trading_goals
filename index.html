@@ -13,7 +13,7 @@
         <div class="midnight-timer">
             <div class="timer-controls">
                 <span class="timer-label">Time Since:</span>
-                <input type="datetime-local" id="timerStartDate" class="timer-date-input" onchange="updateTimerStartDate()">
+                <input type="datetime-local" id="timerStartDate" class="timer-date-input" oninput="updateTimerStartDate()" onchange="updateTimerStartDate()">
             </div>
             <span class="timer-display" id="midnightTimer">00:00:00</span>
         </div>

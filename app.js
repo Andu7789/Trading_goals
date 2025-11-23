@@ -1579,8 +1579,11 @@ function updateMidnightTimer() {
 
 function updateTimerStartDate() {
     const startDateInput = document.getElementById('timerStartDate');
-    if (startDateInput && startDateInput.value) {
-        localStorage.setItem('timerStartDate', startDateInput.value);
+    if (startDateInput) {
+        if (startDateInput.value) {
+            localStorage.setItem('timerStartDate', startDateInput.value);
+        }
+        // Force immediate update
         updateMidnightTimer();
     }
 }
