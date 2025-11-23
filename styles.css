@@ -44,10 +44,17 @@ body {
     padding: 15px 25px;
     margin-bottom: 20px;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 15px;
+    gap: 12px;
     box-shadow: var(--shadow);
+}
+
+.timer-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .timer-label {
@@ -56,12 +63,34 @@ body {
     font-weight: 500;
 }
 
+.timer-date-input {
+    background: var(--dark-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-family: 'Courier New', monospace;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.timer-date-input:hover {
+    border-color: var(--primary-color);
+}
+
+.timer-date-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
+}
+
 .timer-display {
-    font-size: 1.8rem;
+    font-size: 2.2rem;
     font-weight: 700;
     color: var(--primary-color);
     font-family: 'Courier New', monospace;
-    letter-spacing: 2px;
+    letter-spacing: 3px;
 }
 
 /* Header */

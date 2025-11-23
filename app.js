@@ -746,8 +746,9 @@ function exportData() {
         payouts,
         balanceHistory,
         rEntries,
+        timerStartDate: localStorage.getItem('timerStartDate'),
         exportDate: new Date().toISOString(),
-        version: '1.1'
+        version: '1.3'
     };
 
     const dataStr = JSON.stringify(data, null, 2);
@@ -793,6 +794,15 @@ function importData(event) {
             payouts = data.payouts;
             balanceHistory = data.balanceHistory;
             rEntries = data.rEntries || [];
+
+            // Restore timer start date if it exists
+            if (data.timerStartDate) {
+                localStorage.setItem('timerStartDate', data.timerStartDate);
+                const timerInput = document.getElementById('timerStartDate');
+                if (timerInput) {
+                    timerInput.value = data.timerStartDate;
+                }
+            }
 
             // Save to localStorage
             saveData();
@@ -1220,8 +1230,9 @@ async function syncToCloud() {
         payouts,
         balanceHistory,
         rEntries,
+        timerStartDate: localStorage.getItem('timerStartDate'),
         syncDate: new Date().toISOString(),
-        version: '1.2'
+        version: '1.3'
     };
 
     try {
@@ -1483,6 +1494,15 @@ async function syncFromCloud() {
         balanceHistory = data.balanceHistory || {};
         rEntries = data.rEntries || [];
 
+        // Restore timer start date if it exists
+        if (data.timerStartDate) {
+            localStorage.setItem('timerStartDate', data.timerStartDate);
+            const timerInput = document.getElementById('timerStartDate');
+            if (timerInput) {
+                timerInput.value = data.timerStartDate;
+            }
+        }
+
         console.log('After import - new data:', {
             challenges: challenges.length,
             payouts: payouts.length,
@@ -1527,10 +1547,23 @@ function disconnectGitHub() {
 // Midnight Timer
 function updateMidnightTimer() {
     const now = new Date();
-    const midnight = new Date();
-    midnight.setHours(0, 0, 0, 0);
+    const startDateInput = document.getElementById('timerStartDate');
 
-    const elapsed = now - midnight;
+    if (!startDateInput || !startDateInput.value) {
+        return;
+    }
+
+    const startDate = new Date(startDateInput.value);
+    const elapsed = now - startDate;
+
+    // If the selected time is in the future, show 00:00:00
+    if (elapsed < 0) {
+        const timerElement = document.getElementById('midnightTimer');
+        if (timerElement) {
+            timerElement.textContent = '00:00:00';
+        }
+        return;
+    }
 
     const hours = Math.floor(elapsed / (1000 * 60 * 60));
     const minutes = Math.floor((elapsed % (1000 * 60 * 60)) / (1000 * 60));
@@ -1544,7 +1577,43 @@ function updateMidnightTimer() {
     }
 }
 
+function updateTimerStartDate() {
+    const startDateInput = document.getElementById('timerStartDate');
+    if (startDateInput && startDateInput.value) {
+        localStorage.setItem('timerStartDate', startDateInput.value);
+        updateMidnightTimer();
+    }
+}
+
+function loadTimerStartDate() {
+    const startDateInput = document.getElementById('timerStartDate');
+    if (!startDateInput) return;
+
+    // Try to load saved date from localStorage
+    const savedDate = localStorage.getItem('timerStartDate');
+
+    if (savedDate) {
+        startDateInput.value = savedDate;
+    } else {
+        // Set to midnight tonight (00:00:00 of today)
+        const midnight = new Date();
+        midnight.setHours(0, 0, 0, 0);
+
+        // Format for datetime-local input (YYYY-MM-DDTHH:mm)
+        const year = midnight.getFullYear();
+        const month = String(midnight.getMonth() + 1).padStart(2, '0');
+        const day = String(midnight.getDate()).padStart(2, '0');
+        const hours = String(midnight.getHours()).padStart(2, '0');
+        const minutes = String(midnight.getMinutes()).padStart(2, '0');
+
+        const formattedDate = `${year}-${month}-${day}T${hours}:${minutes}`;
+        startDateInput.value = formattedDate;
+        localStorage.setItem('timerStartDate', formattedDate);
+    }
+}
+
 function startMidnightTimer() {
+    loadTimerStartDate();
     updateMidnightTimer(); // Update immediately
     setInterval(updateMidnightTimer, 1000); // Update every second
 }
