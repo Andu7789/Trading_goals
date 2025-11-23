@@ -746,8 +746,9 @@ function exportData() {
         payouts,
         balanceHistory,
         rEntries,
+        timerStartDate: localStorage.getItem('timerStartDate'),
         exportDate: new Date().toISOString(),
-        version: '1.1'
+        version: '1.3'
     };
 
     const dataStr = JSON.stringify(data, null, 2);
@@ -793,6 +794,15 @@ function importData(event) {
             payouts = data.payouts;
             balanceHistory = data.balanceHistory;
             rEntries = data.rEntries || [];
+
+            // Restore timer start date if it exists
+            if (data.timerStartDate) {
+                localStorage.setItem('timerStartDate', data.timerStartDate);
+                const timerInput = document.getElementById('timerStartDate');
+                if (timerInput) {
+                    timerInput.value = data.timerStartDate;
+                }
+            }
 
             // Save to localStorage
             saveData();
@@ -1220,8 +1230,9 @@ async function syncToCloud() {
         payouts,
         balanceHistory,
         rEntries,
+        timerStartDate: localStorage.getItem('timerStartDate'),
         syncDate: new Date().toISOString(),
-        version: '1.2'
+        version: '1.3'
     };
 
     try {
@@ -1482,6 +1493,15 @@ async function syncFromCloud() {
         payouts = data.payouts || [];
         balanceHistory = data.balanceHistory || {};
         rEntries = data.rEntries || [];
+
+        // Restore timer start date if it exists
+        if (data.timerStartDate) {
+            localStorage.setItem('timerStartDate', data.timerStartDate);
+            const timerInput = document.getElementById('timerStartDate');
+            if (timerInput) {
+                timerInput.value = data.timerStartDate;
+            }
+        }
 
         console.log('After import - new data:', {
             challenges: challenges.length,
