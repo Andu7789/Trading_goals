@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderPayouts();
     setDefaultDates();
     updateSyncButtonState();
+    startMidnightTimer();
 });
 
 // Local Storage Management
@@ -1521,6 +1522,31 @@ function disconnectGitHub() {
 
     updateSyncButtonState();
     alert('GitHub sync disconnected.');
+}
+
+// Midnight Timer
+function updateMidnightTimer() {
+    const now = new Date();
+    const midnight = new Date();
+    midnight.setHours(0, 0, 0, 0);
+
+    const elapsed = now - midnight;
+
+    const hours = Math.floor(elapsed / (1000 * 60 * 60));
+    const minutes = Math.floor((elapsed % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((elapsed % (1000 * 60)) / 1000);
+
+    const formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+    const timerElement = document.getElementById('midnightTimer');
+    if (timerElement) {
+        timerElement.textContent = formattedTime;
+    }
+}
+
+function startMidnightTimer() {
+    updateMidnightTimer(); // Update immediately
+    setInterval(updateMidnightTimer, 1000); // Update every second
 }
 
 // Note: Modals only close via buttons or ESC key, not by clicking outside
