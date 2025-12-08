@@ -253,6 +253,7 @@ function saveChallengeAccount(event) {
     saveData();
     updateDashboard();
     renderChallenges();
+    renderScalingTable();
     closeModal('addChallengeModal');
 }
 
@@ -263,6 +264,7 @@ function deleteChallenge(challengeId) {
         saveData();
         updateDashboard();
         renderChallenges();
+        renderScalingTable();
     }
 }
 
@@ -279,9 +281,11 @@ function renderChallenges() {
         const profitPercent = (profit / parseFloat(challenge.initialBalance)) * 100;
         const profitClass = profit >= 0 ? 'positive' : 'negative';
         const profitSign = profit >= 0 ? '+' : '';
+        const hasScalingClass = challenge.hasScaling ? 'has-scaling' : '';
+        const scalingBadge = challenge.hasScaling ? `<span class="scaling-badge">📈 Scaling: ${challenge.scalingTarget}%</span>` : '';
 
         return `
-            <div class="challenge-card ${challenge.status}" onclick="showChallengeDetail('${challenge.id}')" style="cursor: pointer;">
+            <div class="challenge-card ${challenge.status} ${hasScalingClass}" onclick="showChallengeDetail('${challenge.id}')" style="cursor: pointer;">
                 <div class="challenge-header">
                     <div>
                         <div class="challenge-title">${challenge.name}</div>
@@ -289,6 +293,8 @@ function renderChallenges() {
                     </div>
                     <span class="challenge-status ${challenge.status}">${challenge.status}</span>
                 </div>
+
+                ${scalingBadge}
 
                 <div class="challenge-balance">
                     <div class="balance-label">Current Balance</div>
