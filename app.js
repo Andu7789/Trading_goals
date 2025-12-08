@@ -1169,6 +1169,49 @@ function deleteREntry(entryId) {
     renderREntries();
 }
 
+function resetRTracker() {
+    // Confirmation dialog to prevent accidental deletion
+    const confirmReset = confirm(
+        'Are you sure you want to reset the R-Multiple Tracker?\n\n' +
+        'This will:\n' +
+        '- Clear all R entries and history\n' +
+        '- Reset progress to 0%\n' +
+        '- Delete all R-Multiple data\n\n' +
+        'This action cannot be undone!'
+    );
+
+    if (!confirmReset) {
+        return; // User cancelled
+    }
+
+    // Double confirmation for extra safety
+    const doubleConfirm = confirm(
+        'FINAL CONFIRMATION\n\n' +
+        'You are about to permanently delete all R-Multiple tracking data.\n\n' +
+        'Click OK to proceed with the reset, or Cancel to keep your data.'
+    );
+
+    if (!doubleConfirm) {
+        return; // User cancelled on second confirmation
+    }
+
+    // Clear all R entries
+    rEntries = [];
+    saveData();
+
+    // Update all R-related displays
+    updateRTracker();
+    renderREntries();
+
+    // Close history modal if it's open
+    const historyModal = document.getElementById('rHistoryModal');
+    if (historyModal && historyModal.classList.contains('active')) {
+        closeModal('rHistoryModal');
+    }
+
+    alert('R-Multiple Tracker has been reset successfully.');
+}
+
 // GitHub Gist Cloud Sync
 function loadGitHubConfig() {
     const savedToken = localStorage.getItem('githubToken');
