@@ -9,7 +9,6 @@ const R_GOAL = 20;
 
 // Charts
 let payoutChart = null;
-let balanceChart = null;
 let challengeDetailChart = null;
 let rMiniChart = null;
 let rHistoryChart = null;
@@ -30,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateRTracker();
     renderChallenges();
     renderPayouts();
+    renderScalingTable();
     setDefaultDates();
     updateSyncButtonState();
     startMidnightTimer();
@@ -449,7 +449,6 @@ function formatDate(dateString) {
 // Charts
 function initCharts() {
     const payoutCtx = document.getElementById('payoutChart').getContext('2d');
-    const balanceCtx = document.getElementById('balanceChart').getContext('2d');
 
     const chartOptions = {
         responsive: true,
@@ -500,29 +499,10 @@ function initCharts() {
         },
         options: chartOptions
     });
-
-    balanceChart = new Chart(balanceCtx, {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: []
-        },
-        options: {
-            ...chartOptions,
-            plugins: {
-                legend: {
-                    labels: {
-                        color: '#f1f5f9'
-                    }
-                }
-            }
-        }
-    });
 }
 
 function updateCharts() {
     updatePayoutChart();
-    updateBalanceChart();
 }
 
 function updatePayoutChart() {
@@ -557,60 +537,6 @@ function updatePayoutChart() {
     payoutChart.update();
 }
 
-function updateBalanceChart() {
-    if (!balanceChart) return;
-
-    // Get all unique dates first
-    const allDates = new Set();
-    Object.values(balanceHistory).forEach(history => {
-        history.forEach(entry => allDates.add(entry.date));
-    });
-
-    const sortedDates = Array.from(allDates).sort((a, b) => new Date(a) - new Date(b));
-
-    const datasets = [];
-    const colors = [
-        '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6',
-        '#ec4899', '#14b8a6', '#f97316', '#06b6d4', '#84cc16'
-    ];
-
-    challenges.forEach((challenge, index) => {
-        const history = balanceHistory[challenge.id] || [];
-        if (history.length > 0) {
-            const sortedHistory = [...history].sort((a, b) => new Date(a.date) - new Date(b.date));
-
-            // Create a map of date to balance for quick lookup
-            const dateBalanceMap = new Map();
-            sortedHistory.forEach(entry => {
-                dateBalanceMap.set(entry.date, entry.balance);
-            });
-
-            // Map data to all dates, using null for missing dates or carrying forward last known value
-            let lastBalance = null;
-            const data = sortedDates.map(date => {
-                if (dateBalanceMap.has(date)) {
-                    lastBalance = dateBalanceMap.get(date);
-                    return lastBalance;
-                }
-                // Return null for dates before this challenge has any data
-                return lastBalance;
-            });
-
-            datasets.push({
-                label: challenge.name,
-                data: data,
-                borderColor: colors[index % colors.length],
-                backgroundColor: 'transparent',
-                tension: 0.4,
-                spanGaps: false
-            });
-        }
-    });
-
-    balanceChart.data.labels = sortedDates.map(date => formatDate(date));
-    balanceChart.data.datasets = datasets;
-    balanceChart.update();
-}
 
 // Challenge Detail View
 function showChallengeDetail(challengeId) {
@@ -1692,27 +1618,6 @@ function startMidnightTimer() {
     setInterval(updateMidnightTimer, 1000); // Update every second
 }
 
-// Tab Switching
-function switchChartTab(tabName) {
-    // Update tab buttons
-    const tabs = document.querySelectorAll('.chart-tab');
-    tabs.forEach(tab => tab.classList.remove('active'));
-    event.target.classList.add('active');
-
-    // Update tab content
-    const overviewTab = document.getElementById('overviewTab');
-    const scalingTab = document.getElementById('scalingTab');
-
-    if (tabName === 'overview') {
-        overviewTab.classList.add('active');
-        scalingTab.classList.remove('active');
-    } else if (tabName === 'scaling') {
-        overviewTab.classList.remove('active');
-        scalingTab.classList.add('active');
-        renderScalingTable();
-    }
-}
-
 // Scaling Progress Table
 function renderScalingTable() {
     const tbody = document.getElementById('scalingTableBody');
@@ -1728,7 +1633,9 @@ function renderScalingTable() {
     } else if (filterBy === 'near-target') {
         fundedAccounts = fundedAccounts.filter(c => {
             if (!c.hasScaling || !c.scalingTarget) return false;
-            const progress = ((c.currentBalance - c.initialBalance) / (c.scalingTarget - c.initialBalance)) * 100;
+            const currentGainPercent = ((c.currentBalance - c.initialBalance) / c.initialBalance) * 100;
+            const targetGainPercent = parseFloat(c.scalingTarget);
+            const progress = (currentGainPercent / targetGainPercent) * 100;
             return progress > 80;
         });
     } else if (filterBy === 'in-progress') {
@@ -1741,18 +1648,26 @@ function renderScalingTable() {
     // Calculate progress for each account
     const accountsWithProgress = fundedAccounts.map(account => {
         const hasScaling = account.hasScaling && account.scalingTarget;
-        const target = hasScaling ? parseFloat(account.scalingTarget) : 0;
         const current = parseFloat(account.currentBalance);
         const initial = parseFloat(account.initialBalance);
-        const remaining = hasScaling ? target - current : 0;
-        const progress = hasScaling && target > initial
-            ? ((current - initial) / (target - initial)) * 100
+
+        // Calculate percentage-based values
+        const targetGainPercent = hasScaling ? parseFloat(account.scalingTarget) : 0;
+        const targetBalance = hasScaling ? initial * (1 + targetGainPercent / 100) : 0;
+        const currentGainPercent = ((current - initial) / initial) * 100;
+        const remainingPercent = hasScaling ? targetGainPercent - currentGainPercent : 0;
+        const remainingBalance = hasScaling ? targetBalance - current : 0;
+        const progress = hasScaling && targetGainPercent > 0
+            ? (currentGainPercent / targetGainPercent) * 100
             : 0;
 
         return {
             ...account,
-            target,
-            remaining,
+            targetBalance,
+            targetGainPercent,
+            currentGainPercent,
+            remainingBalance,
+            remainingPercent,
             progress: Math.max(0, Math.min(100, progress))
         };
     });
@@ -1765,9 +1680,9 @@ function renderScalingTable() {
             case 'progress-asc':
                 return a.progress - b.progress;
             case 'remaining-asc':
-                return a.remaining - b.remaining;
+                return a.remainingPercent - b.remainingPercent;
             case 'remaining-desc':
-                return b.remaining - a.remaining;
+                return b.remainingPercent - a.remainingPercent;
             case 'name-asc':
                 return a.name.localeCompare(b.name);
             default:
@@ -1777,7 +1692,7 @@ function renderScalingTable() {
 
     // Render table
     if (accountsWithProgress.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No funded accounts match the selected filters</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No funded accounts match the selected filters</td></tr>';
         return;
     }
 
@@ -1794,12 +1709,15 @@ function renderScalingTable() {
                 </td>
                 <td>${account.provider || '-'}</td>
                 <td>£${formatNumber(parseFloat(account.currentBalance))}</td>
-                <td>${account.hasScaling && account.target ? '£' + formatNumber(account.target) : '-'}</td>
-                <td class="${account.remaining < 0 ? 'positive' : ''}">
-                    ${account.hasScaling && account.target ? '£' + formatNumber(Math.abs(account.remaining)) : '-'}
+                <td>${account.hasScaling && account.targetGainPercent ? '£' + formatNumber(account.targetBalance) + ' (' + account.targetGainPercent.toFixed(1) + '%)' : '-'}</td>
+                <td class="${account.remainingPercent < 0 ? 'positive' : ''}">
+                    ${account.hasScaling && account.targetGainPercent ? account.remainingPercent.toFixed(1) + '%' : '-'}
+                </td>
+                <td class="${account.currentGainPercent >= account.targetGainPercent ? 'positive' : ''}">
+                    ${account.hasScaling || account.currentGainPercent !== 0 ? account.currentGainPercent.toFixed(2) + '%' : '-'}
                 </td>
                 <td>
-                    ${account.hasScaling && account.target ? `
+                    ${account.hasScaling && account.targetGainPercent ? `
                         <div class="progress-cell">
                             <div class="progress-bar-small">
                                 <div class="progress-fill ${progressClass}" style="width: ${account.progress}%"></div>

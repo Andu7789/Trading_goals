@@ -1125,54 +1125,12 @@ body {
     background: #475569;
 }
 
-/* Tab Navigation */
-.chart-tabs {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    border-bottom: 2px solid var(--card-border);
+/* Full Width Chart Section */
+.chart-section-full {
+    margin-bottom: 30px;
 }
 
-.chart-tab {
-    background: transparent;
-    border: none;
-    color: var(--text-secondary);
-    padding: 12px 24px;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s;
-    border-bottom: 3px solid transparent;
-    position: relative;
-    bottom: -2px;
-}
-
-.chart-tab:hover {
-    color: var(--text-primary);
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.chart-tab.active {
-    color: var(--primary-color);
-    border-bottom-color: var(--primary-color);
-}
-
-.tab-content {
-    display: none;
-}
-
-.tab-content.active {
-    display: block;
-}
-
-.charts-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-    gap: 25px;
-}
-
-/* Scaling Section */
-.scaling-section {
+.chart-card-full {
     background: var(--card-bg);
     border: 1px solid var(--card-border);
     border-radius: 12px;
@@ -1180,7 +1138,23 @@ body {
     box-shadow: var(--shadow);
 }
 
-.scaling-section .section-header {
+.chart-card-full h3 {
+    margin: 0 0 20px 0;
+    color: var(--text-primary);
+    font-size: 1.3rem;
+}
+
+/* Scaling Section */
+.scaling-section-full {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: var(--shadow);
+    margin-bottom: 30px;
+}
+
+.scaling-section-full .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1189,7 +1163,7 @@ body {
     gap: 15px;
 }
 
-.scaling-section h3 {
+.scaling-section-full h3 {
     margin: 0;
     color: var(--text-primary);
     font-size: 1.3rem;
