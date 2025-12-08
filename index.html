@@ -128,15 +128,68 @@
             </div>
         </section>
 
-        <!-- Charts Section -->
+        <!-- Charts Section with Tabs -->
         <section class="charts-section">
-            <div class="chart-card">
-                <h3>Payout History</h3>
-                <canvas id="payoutChart"></canvas>
+            <div class="chart-tabs">
+                <button class="chart-tab active" onclick="switchChartTab('overview')">Overview</button>
+                <button class="chart-tab" onclick="switchChartTab('scaling')">Scaling Targets</button>
             </div>
-            <div class="chart-card">
-                <h3>Challenge Balance Trends</h3>
-                <canvas id="balanceChart"></canvas>
+
+            <!-- Overview Tab Content -->
+            <div id="overviewTab" class="tab-content active">
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3>Payout History</h3>
+                        <canvas id="payoutChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Challenge Balance Trends</h3>
+                        <canvas id="balanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scaling Tab Content -->
+            <div id="scalingTab" class="tab-content">
+                <div class="scaling-section">
+                    <div class="section-header">
+                        <h3>Scaling Progress Tracker</h3>
+                        <div class="scaling-controls">
+                            <select id="scalingSortBy" onchange="renderScalingTable()">
+                                <option value="progress-desc">Highest Progress First</option>
+                                <option value="progress-asc">Lowest Progress First</option>
+                                <option value="remaining-asc">Nearest to Target</option>
+                                <option value="remaining-desc">Furthest from Target</option>
+                                <option value="name-asc">Name A-Z</option>
+                            </select>
+                            <select id="scalingFilterBy" onchange="renderScalingTable()">
+                                <option value="all">All Funded Accounts</option>
+                                <option value="scaling-only">Only Accounts with Scaling</option>
+                                <option value="near-target">Near Target (>80%)</option>
+                                <option value="in-progress">In Progress (>0%)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="scaling-table-container">
+                        <table class="scaling-table" id="scalingTable">
+                            <thead>
+                                <tr>
+                                    <th>Account Name</th>
+                                    <th>Provider</th>
+                                    <th>Current Balance</th>
+                                    <th>Target Balance</th>
+                                    <th>Remaining</th>
+                                    <th>Progress</th>
+                                </tr>
+                            </thead>
+                            <tbody id="scalingTableBody">
+                                <tr>
+                                    <td colspan="6" class="empty-state">No funded accounts with scaling targets</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -205,6 +258,24 @@
                     <label for="startDate">Start Date</label>
                     <input type="date" id="startDate">
                 </div>
+
+                <!-- Scaling Section -->
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="hasScaling" onchange="toggleScalingFields()">
+                        Account has scaling
+                    </label>
+                </div>
+                <div id="scalingFields" style="display: none;">
+                    <div class="form-group">
+                        <label for="scalingTarget">Scaling Target Balance (£) *</label>
+                        <input type="number" id="scalingTarget" min="0" step="0.01" placeholder="Target balance for scaling">
+                        <small style="color: var(--text-secondary); display: block; margin-top: 5px;">
+                            The balance needed to qualify for scaling
+                        </small>
+                    </div>
+                </div>
+
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeModal('addChallengeModal')">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Challenge</button>

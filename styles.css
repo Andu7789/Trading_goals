@@ -1124,3 +1124,236 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: #475569;
 }
+
+/* Tab Navigation */
+.chart-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--card-border);
+}
+
+.chart-tab {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-bottom: 3px solid transparent;
+    position: relative;
+    bottom: -2px;
+}
+
+.chart-tab:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.chart-tab.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    gap: 25px;
+}
+
+/* Scaling Section */
+.scaling-section {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: var(--shadow);
+}
+
+.scaling-section .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.scaling-section h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.3rem;
+}
+
+.scaling-controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.scaling-controls select {
+    background: var(--dark-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.scaling-controls select:hover {
+    border-color: var(--primary-color);
+}
+
+.scaling-controls select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
+}
+
+/* Scaling Table */
+.scaling-table-container {
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid var(--card-border);
+}
+
+.scaling-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--dark-bg);
+}
+
+.scaling-table thead {
+    background: var(--card-bg);
+}
+
+.scaling-table th {
+    padding: 15px;
+    text-align: left;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--card-border);
+}
+
+.scaling-table td {
+    padding: 15px;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--card-border);
+}
+
+.scaling-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.scaling-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.scaling-row {
+    transition: background-color 0.2s;
+}
+
+.account-name-cell strong {
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.account-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Progress Cell */
+.progress-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.progress-bar-small {
+    flex: 1;
+    height: 8px;
+    background: var(--card-border);
+    border-radius: 4px;
+    overflow: hidden;
+    min-width: 100px;
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.progress-fill.low-progress {
+    background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);
+}
+
+.progress-fill.medium-progress {
+    background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+}
+
+.progress-fill.high-progress {
+    background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+}
+
+.progress-text {
+    font-weight: 600;
+    color: var(--text-primary);
+    min-width: 50px;
+    text-align: right;
+}
+
+.scaling-table .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+}
+
+/* Mobile Responsive for Scaling */
+@media (max-width: 768px) {
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .scaling-controls {
+        width: 100%;
+    }
+
+    .scaling-controls select {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .scaling-table-container {
+        overflow-x: scroll;
+    }
+
+    .scaling-table {
+        min-width: 800px;
+    }
+
+    .chart-tabs {
+        overflow-x: auto;
+    }
+
+    .chart-tab {
+        white-space: nowrap;
+    }
+}

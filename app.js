@@ -140,6 +140,15 @@ function showAddChallengeModal(challengeId = null) {
             document.getElementById('currentBalance').value = challenge.currentBalance;
             document.getElementById('challengeStatus').value = challenge.status;
             document.getElementById('startDate').value = challenge.startDate;
+
+            // Load scaling data
+            const hasScalingCheckbox = document.getElementById('hasScaling');
+            const scalingTargetInput = document.getElementById('scalingTarget');
+            if (challenge.hasScaling) {
+                hasScalingCheckbox.checked = true;
+                scalingTargetInput.value = challenge.scalingTarget || '';
+                toggleScalingFields();
+            }
         }
     } else {
         title.textContent = 'Add Challenge Account';
@@ -147,6 +156,21 @@ function showAddChallengeModal(challengeId = null) {
     }
 
     modal.classList.add('active');
+}
+
+function toggleScalingFields() {
+    const hasScaling = document.getElementById('hasScaling').checked;
+    const scalingFields = document.getElementById('scalingFields');
+    const scalingTarget = document.getElementById('scalingTarget');
+
+    if (hasScaling) {
+        scalingFields.style.display = 'block';
+        scalingTarget.required = true;
+    } else {
+        scalingFields.style.display = 'none';
+        scalingTarget.required = false;
+        scalingTarget.value = '';
+    }
 }
 
 function saveChallengeAccount(event) {
@@ -160,6 +184,10 @@ function saveChallengeAccount(event) {
     const status = document.getElementById('challengeStatus').value;
     const startDate = document.getElementById('startDate').value;
 
+    // Get scaling data
+    const hasScaling = document.getElementById('hasScaling').checked;
+    const scalingTarget = hasScaling ? parseFloat(document.getElementById('scalingTarget').value) : null;
+
     const existingIndex = challenges.findIndex(c => c.id === id);
 
     const challenge = {
@@ -172,11 +200,37 @@ function saveChallengeAccount(event) {
         startDate,
         createdAt: new Date().toISOString(),
         // Mark if this account started as funded (not a challenge to complete)
-        startedAsFunded: existingIndex < 0 ? (status === 'funded') : challenges[existingIndex].startedAsFunded
+        startedAsFunded: existingIndex < 0 ? (status === 'funded') : challenges[existingIndex].startedAsFunded,
+        // Scaling data
+        hasScaling,
+        scalingTarget
     };
 
     if (existingIndex >= 0) {
         challenges[existingIndex] = challenge;
+
+        // Ensure balance history exists for existing challenges
+        if (!balanceHistory[id]) {
+            balanceHistory[id] = [{
+                date: startDate,
+                balance: initialBalance,
+                notes: 'Initial balance',
+                timestamp: new Date().toISOString()
+            }];
+        }
+
+        // If current balance changed, add new entry
+        if (balanceHistory[id].length > 0) {
+            const latestEntry = [...balanceHistory[id]].sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+            if (latestEntry.balance !== currentBalance) {
+                balanceHistory[id].push({
+                    date: new Date().toISOString().split('T')[0],
+                    balance: currentBalance,
+                    notes: 'Balance updated',
+                    timestamp: new Date().toISOString()
+                });
+            }
+        }
     } else {
         challenges.push(challenge);
         // Initialize balance history for new challenge
@@ -768,7 +822,7 @@ function exportData() {
         rEntries,
         timerStartDate: localStorage.getItem('timerStartDate'),
         exportDate: new Date().toISOString(),
-        version: '1.3'
+        version: '1.4'
     };
 
     const dataStr = JSON.stringify(data, null, 2);
@@ -1252,7 +1306,7 @@ async function syncToCloud() {
         rEntries,
         timerStartDate: localStorage.getItem('timerStartDate'),
         syncDate: new Date().toISOString(),
-        version: '1.3'
+        version: '1.4'
     };
 
     try {
@@ -1636,6 +1690,127 @@ function startMidnightTimer() {
     loadTimerStartDate();
     updateMidnightTimer(); // Update immediately
     setInterval(updateMidnightTimer, 1000); // Update every second
+}
+
+// Tab Switching
+function switchChartTab(tabName) {
+    // Update tab buttons
+    const tabs = document.querySelectorAll('.chart-tab');
+    tabs.forEach(tab => tab.classList.remove('active'));
+    event.target.classList.add('active');
+
+    // Update tab content
+    const overviewTab = document.getElementById('overviewTab');
+    const scalingTab = document.getElementById('scalingTab');
+
+    if (tabName === 'overview') {
+        overviewTab.classList.add('active');
+        scalingTab.classList.remove('active');
+    } else if (tabName === 'scaling') {
+        overviewTab.classList.remove('active');
+        scalingTab.classList.add('active');
+        renderScalingTable();
+    }
+}
+
+// Scaling Progress Table
+function renderScalingTable() {
+    const tbody = document.getElementById('scalingTableBody');
+    const sortBy = document.getElementById('scalingSortBy').value;
+    const filterBy = document.getElementById('scalingFilterBy').value;
+
+    // Filter funded accounts
+    let fundedAccounts = challenges.filter(c => c.status === 'funded');
+
+    // Apply additional filters
+    if (filterBy === 'scaling-only') {
+        fundedAccounts = fundedAccounts.filter(c => c.hasScaling);
+    } else if (filterBy === 'near-target') {
+        fundedAccounts = fundedAccounts.filter(c => {
+            if (!c.hasScaling || !c.scalingTarget) return false;
+            const progress = ((c.currentBalance - c.initialBalance) / (c.scalingTarget - c.initialBalance)) * 100;
+            return progress > 80;
+        });
+    } else if (filterBy === 'in-progress') {
+        fundedAccounts = fundedAccounts.filter(c => {
+            if (!c.hasScaling || !c.scalingTarget) return false;
+            return c.currentBalance > c.initialBalance;
+        });
+    }
+
+    // Calculate progress for each account
+    const accountsWithProgress = fundedAccounts.map(account => {
+        const hasScaling = account.hasScaling && account.scalingTarget;
+        const target = hasScaling ? parseFloat(account.scalingTarget) : 0;
+        const current = parseFloat(account.currentBalance);
+        const initial = parseFloat(account.initialBalance);
+        const remaining = hasScaling ? target - current : 0;
+        const progress = hasScaling && target > initial
+            ? ((current - initial) / (target - initial)) * 100
+            : 0;
+
+        return {
+            ...account,
+            target,
+            remaining,
+            progress: Math.max(0, Math.min(100, progress))
+        };
+    });
+
+    // Sort accounts
+    accountsWithProgress.sort((a, b) => {
+        switch (sortBy) {
+            case 'progress-desc':
+                return b.progress - a.progress;
+            case 'progress-asc':
+                return a.progress - b.progress;
+            case 'remaining-asc':
+                return a.remaining - b.remaining;
+            case 'remaining-desc':
+                return b.remaining - a.remaining;
+            case 'name-asc':
+                return a.name.localeCompare(b.name);
+            default:
+                return 0;
+        }
+    });
+
+    // Render table
+    if (accountsWithProgress.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No funded accounts match the selected filters</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = accountsWithProgress.map(account => {
+        const progressClass = account.progress >= 80 ? 'high-progress' : account.progress >= 50 ? 'medium-progress' : 'low-progress';
+        const hasScalingDisplay = account.hasScaling ? '' : ' (No Scaling)';
+
+        return `
+            <tr class="scaling-row">
+                <td>
+                    <div class="account-name-cell">
+                        <strong>${account.name}</strong>${hasScalingDisplay}
+                    </div>
+                </td>
+                <td>${account.provider || '-'}</td>
+                <td>£${formatNumber(parseFloat(account.currentBalance))}</td>
+                <td>${account.hasScaling && account.target ? '£' + formatNumber(account.target) : '-'}</td>
+                <td class="${account.remaining < 0 ? 'positive' : ''}">
+                    ${account.hasScaling && account.target ? '£' + formatNumber(Math.abs(account.remaining)) : '-'}
+                </td>
+                <td>
+                    ${account.hasScaling && account.target ? `
+                        <div class="progress-cell">
+                            <div class="progress-bar-small">
+                                <div class="progress-fill ${progressClass}" style="width: ${account.progress}%"></div>
+                            </div>
+                            <span class="progress-text">${account.progress.toFixed(1)}%</span>
+                        </div>
+                    ` : '-'}
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
 // Note: Modals only close via buttons or ESC key, not by clicking outside
