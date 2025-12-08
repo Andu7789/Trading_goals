@@ -109,10 +109,12 @@ function calculateTotalPayouts() {
 }
 
 function calculateUnrealizedProfit() {
-    return challenges.reduce((sum, challenge) => {
-        const profit = parseFloat(challenge.currentBalance) - parseFloat(challenge.initialBalance);
-        return sum + (profit > 0 ? profit : 0);
-    }, 0);
+    return challenges
+        .filter(challenge => challenge.status === 'funded')
+        .reduce((sum, challenge) => {
+            const profit = parseFloat(challenge.currentBalance) - parseFloat(challenge.initialBalance);
+            return sum + (profit > 0 ? profit : 0);
+        }, 0);
 }
 
 function formatNumber(num) {
@@ -504,6 +506,14 @@ function updatePayoutChart() {
 function updateBalanceChart() {
     if (!balanceChart) return;
 
+    // Get all unique dates first
+    const allDates = new Set();
+    Object.values(balanceHistory).forEach(history => {
+        history.forEach(entry => allDates.add(entry.date));
+    });
+
+    const sortedDates = Array.from(allDates).sort((a, b) => new Date(a) - new Date(b));
+
     const datasets = [];
     const colors = [
         '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6',
@@ -515,23 +525,33 @@ function updateBalanceChart() {
         if (history.length > 0) {
             const sortedHistory = [...history].sort((a, b) => new Date(a.date) - new Date(b.date));
 
+            // Create a map of date to balance for quick lookup
+            const dateBalanceMap = new Map();
+            sortedHistory.forEach(entry => {
+                dateBalanceMap.set(entry.date, entry.balance);
+            });
+
+            // Map data to all dates, using null for missing dates or carrying forward last known value
+            let lastBalance = null;
+            const data = sortedDates.map(date => {
+                if (dateBalanceMap.has(date)) {
+                    lastBalance = dateBalanceMap.get(date);
+                    return lastBalance;
+                }
+                // Return null for dates before this challenge has any data
+                return lastBalance;
+            });
+
             datasets.push({
                 label: challenge.name,
-                data: sortedHistory.map(entry => entry.balance),
+                data: data,
                 borderColor: colors[index % colors.length],
                 backgroundColor: 'transparent',
-                tension: 0.4
+                tension: 0.4,
+                spanGaps: false
             });
         }
     });
-
-    // Get all unique dates
-    const allDates = new Set();
-    Object.values(balanceHistory).forEach(history => {
-        history.forEach(entry => allDates.add(entry.date));
-    });
-
-    const sortedDates = Array.from(allDates).sort((a, b) => new Date(a) - new Date(b));
 
     balanceChart.data.labels = sortedDates.map(date => formatDate(date));
     balanceChart.data.datasets = datasets;
