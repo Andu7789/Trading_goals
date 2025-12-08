@@ -303,6 +303,14 @@ function renderChallenges() {
             return parseFloat(b.currentBalance) - parseFloat(a.currentBalance);
         } else if (sortBy === 'balance-asc') {
             return parseFloat(a.currentBalance) - parseFloat(b.currentBalance);
+        } else if (sortBy === 'percent-desc') {
+            const aPercent = ((parseFloat(a.currentBalance) - parseFloat(a.initialBalance)) / parseFloat(a.initialBalance)) * 100;
+            const bPercent = ((parseFloat(b.currentBalance) - parseFloat(b.initialBalance)) / parseFloat(b.initialBalance)) * 100;
+            return bPercent - aPercent;
+        } else if (sortBy === 'percent-asc') {
+            const aPercent = ((parseFloat(a.currentBalance) - parseFloat(a.initialBalance)) / parseFloat(a.initialBalance)) * 100;
+            const bPercent = ((parseFloat(b.currentBalance) - parseFloat(b.initialBalance)) / parseFloat(b.initialBalance)) * 100;
+            return aPercent - bPercent;
         } else if (sortBy === 'date-desc') {
             return new Date(b.startDate) - new Date(a.startDate);
         } else if (sortBy === 'date-asc') {
