@@ -270,13 +270,54 @@ function deleteChallenge(challengeId) {
 
 function renderChallenges() {
     const grid = document.getElementById('challengesGrid');
+    const sortBy = document.getElementById('challengeSortBy')?.value || 'name-asc';
+    const filterBy = document.getElementById('challengeFilterBy')?.value || 'all';
 
     if (challenges.length === 0) {
         grid.innerHTML = '<div class="empty-state"><p>No challenges yet. Add your first challenge to start tracking!</p></div>';
         return;
     }
 
-    grid.innerHTML = challenges.map(challenge => {
+    // Filter challenges
+    let filteredChallenges = challenges;
+
+    if (filterBy === 'active') {
+        filteredChallenges = challenges.filter(c => c.status === 'active');
+    } else if (filterBy === 'funded') {
+        filteredChallenges = challenges.filter(c => c.status === 'funded');
+    } else if (filterBy === 'passed') {
+        filteredChallenges = challenges.filter(c => c.status === 'passed');
+    } else if (filterBy === 'failed') {
+        filteredChallenges = challenges.filter(c => c.status === 'failed');
+    } else if (filterBy === 'scaling') {
+        filteredChallenges = challenges.filter(c => c.hasScaling);
+    }
+
+    // Sort challenges
+    const sortedChallenges = [...filteredChallenges].sort((a, b) => {
+        if (sortBy === 'name-asc') {
+            return a.name.localeCompare(b.name);
+        } else if (sortBy === 'name-desc') {
+            return b.name.localeCompare(a.name);
+        } else if (sortBy === 'balance-desc') {
+            return parseFloat(b.currentBalance) - parseFloat(a.currentBalance);
+        } else if (sortBy === 'balance-asc') {
+            return parseFloat(a.currentBalance) - parseFloat(b.currentBalance);
+        } else if (sortBy === 'date-desc') {
+            return new Date(b.startDate) - new Date(a.startDate);
+        } else if (sortBy === 'date-asc') {
+            return new Date(a.startDate) - new Date(b.startDate);
+        }
+        return 0;
+    });
+
+    // Check if filtered results are empty
+    if (sortedChallenges.length === 0) {
+        grid.innerHTML = '<div class="empty-state"><p>No challenges match the selected filter.</p></div>';
+        return;
+    }
+
+    grid.innerHTML = sortedChallenges.map(challenge => {
         const profit = parseFloat(challenge.currentBalance) - parseFloat(challenge.initialBalance);
         const profitPercent = (profit / parseFloat(challenge.initialBalance)) * 100;
         const profitClass = profit >= 0 ? 'positive' : 'negative';
@@ -754,7 +795,7 @@ function exportData() {
         rEntries,
         timerStartDate: localStorage.getItem('timerStartDate'),
         exportDate: new Date().toISOString(),
-        version: '1.4'
+        version: '1.5'
     };
 
     const dataStr = JSON.stringify(data, null, 2);
@@ -1238,7 +1279,7 @@ async function syncToCloud() {
         rEntries,
         timerStartDate: localStorage.getItem('timerStartDate'),
         syncDate: new Date().toISOString(),
-        version: '1.4'
+        version: '1.5'
     };
 
     try {

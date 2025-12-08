@@ -182,6 +182,24 @@
         <section class="challenges-section">
             <div class="section-header">
                 <h2>Challenge Accounts</h2>
+                <div class="challenge-controls">
+                    <select id="challengeSortBy" onchange="renderChallenges()">
+                        <option value="name-asc">Name A-Z</option>
+                        <option value="name-desc">Name Z-A</option>
+                        <option value="balance-desc">Balance High-Low</option>
+                        <option value="balance-asc">Balance Low-High</option>
+                        <option value="date-desc">Newest First</option>
+                        <option value="date-asc">Oldest First</option>
+                    </select>
+                    <select id="challengeFilterBy" onchange="renderChallenges()">
+                        <option value="all">All Accounts</option>
+                        <option value="active">Active Only</option>
+                        <option value="funded">Funded Only</option>
+                        <option value="passed">Passed Only</option>
+                        <option value="failed">Failed Only</option>
+                        <option value="scaling">Has Scaling</option>
+                    </select>
+                </div>
                 <button class="btn btn-primary" onclick="showAddChallengeModal()">+ Add Challenge</button>
             </div>
             <div class="challenges-grid" id="challengesGrid">

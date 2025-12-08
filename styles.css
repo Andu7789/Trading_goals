@@ -535,6 +535,33 @@ body {
     font-weight: 600;
 }
 
+.challenge-controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.challenge-controls select {
+    background: var(--dark-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.challenge-controls select:hover {
+    border-color: var(--primary-color);
+}
+
+.challenge-controls select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
+}
+
 .challenges-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -1122,6 +1149,15 @@ body {
         flex-direction: column;
         gap: 15px;
         align-items: stretch;
+    }
+
+    .challenge-controls {
+        width: 100%;
+    }
+
+    .challenge-controls select {
+        flex: 1;
+        min-width: 0;
     }
 
     .payout-item {
