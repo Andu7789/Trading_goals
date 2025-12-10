@@ -198,7 +198,7 @@ function saveChallengeAccount(event) {
         currentBalance,
         status,
         startDate,
-        createdAt: new Date().toISOString(),
+        createdAt: existingIndex >= 0 ? challenges[existingIndex].createdAt : new Date().toISOString(),
         // Mark if this account started as funded (not a challenge to complete)
         startedAsFunded: existingIndex < 0 ? (status === 'funded') : challenges[existingIndex].startedAsFunded,
         // Scaling data
@@ -285,6 +285,10 @@ function renderChallenges() {
         return;
     }
 
+    // Debug: Log all challenge statuses
+    console.log('All challenges:', challenges.map(c => ({name: c.name, status: c.status})));
+    console.log('Active filter:', filterBy);
+
     // Filter challenges
     let filteredChallenges = challenges;
 
@@ -299,6 +303,8 @@ function renderChallenges() {
     } else if (filterBy === 'scaling') {
         filteredChallenges = challenges.filter(c => c.hasScaling);
     }
+
+    console.log('Filtered challenges:', filteredChallenges.map(c => ({name: c.name, status: c.status})));
 
     // Sort challenges
     const sortedChallenges = [...filteredChallenges].sort((a, b) => {
