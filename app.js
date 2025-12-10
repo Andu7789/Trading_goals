@@ -140,8 +140,6 @@ function showAddChallengeModal(challengeId = null) {
         title.textContent = 'Edit Challenge Account';
         const challenge = challenges.find(c => c.id === challengeId);
         if (challenge) {
-            console.log('Loading challenge for edit:', {id: challenge.id, name: challenge.name, status: challenge.status});
-
             document.getElementById('challengeId').value = challenge.id;
             document.getElementById('challengeName').value = challenge.name;
             document.getElementById('challengeProvider').value = challenge.provider;
@@ -160,7 +158,6 @@ function showAddChallengeModal(challengeId = null) {
             }
         }
     } else {
-        console.log('Opening modal for NEW challenge');
         title.textContent = 'Add Challenge Account';
         setDefaultDates();
     }
@@ -194,14 +191,11 @@ function saveChallengeAccount(event) {
     const status = document.getElementById('challengeStatus').value;
     const startDate = document.getElementById('startDate').value;
 
-    console.log('Saving challenge:', {id, name, status, isNew: !document.getElementById('challengeId').value});
-
     // Get scaling data
     const hasScaling = document.getElementById('hasScaling').checked;
     const scalingTarget = hasScaling ? parseFloat(document.getElementById('scalingTarget').value) : null;
 
     const existingIndex = challenges.findIndex(c => c.id === id);
-    console.log('Existing index:', existingIndex, 'ID to save:', id);
 
     const challenge = {
         id,
@@ -266,8 +260,6 @@ function saveChallengeAccount(event) {
     saveData();
     updateDashboard();
 
-    console.log('After save - all challenges:', challenges.map(c => ({id: c.id, name: c.name, status: c.status})));
-
     // Reset filter to "All Accounts" to ensure the saved challenge is visible
     const filterDropdown = document.getElementById('challengeFilterBy');
     if (filterDropdown) {
@@ -300,10 +292,6 @@ function renderChallenges() {
         return;
     }
 
-    // Debug: Log all challenge statuses
-    console.log('All challenges:', challenges.map(c => ({name: c.name, status: c.status})));
-    console.log('Active filter:', filterBy);
-
     // Filter challenges
     let filteredChallenges = challenges;
 
@@ -318,8 +306,6 @@ function renderChallenges() {
     } else if (filterBy === 'scaling') {
         filteredChallenges = challenges.filter(c => c.hasScaling);
     }
-
-    console.log('Filtered challenges:', filteredChallenges.map(c => ({name: c.name, status: c.status})));
 
     // Sort challenges
     const sortedChallenges = [...filteredChallenges].sort((a, b) => {
