@@ -62,6 +62,18 @@ function loadData() {
     if (savedREntries) rEntries = JSON.parse(savedREntries);
     if (savedROverallTotal) rOverallTotal = parseFloat(savedROverallTotal);
     if (savedROverallHistory) rOverallHistory = JSON.parse(savedROverallHistory);
+
+    // Initialize overall total from existing R entries if not set
+    if (!savedROverallTotal && rEntries.length > 0) {
+        const currentR = rEntries.reduce((sum, entry) => sum + parseFloat(entry.value), 0);
+        rOverallTotal = currentR;
+        rOverallHistory = [{
+            date: new Date().toISOString(),
+            total: currentR,
+            notes: 'Initialized from existing entries'
+        }];
+        saveData();
+    }
 }
 
 function setDefaultDates() {
