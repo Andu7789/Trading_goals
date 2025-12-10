@@ -67,11 +67,6 @@ function loadData() {
     if (!savedROverallTotal && rEntries.length > 0) {
         const currentR = rEntries.reduce((sum, entry) => sum + parseFloat(entry.value), 0);
         rOverallTotal = currentR;
-        rOverallHistory = [{
-            date: new Date().toISOString(),
-            total: currentR,
-            notes: 'Initialized from existing entries'
-        }];
         saveData();
     }
 }
@@ -1088,9 +1083,34 @@ function updateROverallChart() {
         });
     }
 
-    // Update chart with overall history
-    const labels = rOverallHistory.map(entry => formatDate(entry.date));
-    const data = rOverallHistory.map(entry => entry.total);
+    // Build overall chart from current R entries
+    // Start from rOverallTotal minus current cycle (to get previous cycles total)
+    const currentR = rEntries.reduce((sum, entry) => sum + parseFloat(entry.value), 0);
+    const previousCyclesTotal = rOverallTotal - currentR;
+
+    const sortedEntries = [...rEntries].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    let cumulative = previousCyclesTotal; // Start from previous cycles
+    const labels = [];
+    const data = [];
+
+    // Add starting point if we have previous cycles
+    if (previousCyclesTotal > 0 && sortedEntries.length > 0) {
+        labels.push(formatDate(sortedEntries[0].date));
+        data.push(previousCyclesTotal);
+    }
+
+    sortedEntries.forEach(entry => {
+        cumulative += parseFloat(entry.value);
+        labels.push(formatDate(entry.date));
+        data.push(cumulative);
+    });
+
+    // If no entries but we have overall total, show current state
+    if (sortedEntries.length === 0 && rOverallTotal > 0) {
+        labels.push(formatDate(new Date().toISOString()));
+        data.push(rOverallTotal);
+    }
 
     rOverallChart.data.labels = labels;
     rOverallChart.data.datasets[0].data = data;
@@ -1121,13 +1141,8 @@ function saveREntry(event) {
     rEntries.push(entry);
     rEntries.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    // Update overall total and history
+    // Update overall total
     rOverallTotal += value;
-    rOverallHistory.push({
-        date: new Date().toISOString(),
-        total: rOverallTotal,
-        notes: `Added ${value}R`
-    });
 
     saveData();
     updateRTracker();
@@ -1283,11 +1298,6 @@ function deleteREntry(entryId) {
     if (deletedEntry) {
         // Update overall total by subtracting deleted entry
         rOverallTotal -= parseFloat(deletedEntry.value);
-        rOverallHistory.push({
-            date: new Date().toISOString(),
-            total: rOverallTotal,
-            notes: `Removed ${deletedEntry.value}R`
-        });
     }
 
     rEntries = rEntries.filter(e => e.id !== entryId);
