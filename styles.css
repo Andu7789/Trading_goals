@@ -329,6 +329,29 @@ body {
     flex: 1;
 }
 
+.r-overall-total {
+    text-align: center;
+    padding: 15px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.r-overall-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-right: 10px;
+}
+
+.r-overall-value {
+    color: var(--primary-color);
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
 .r-mini-chart {
     background: rgba(15, 23, 42, 0.6);
     border: 1px solid rgba(99, 102, 241, 0.3);
@@ -337,6 +360,27 @@ body {
     height: 200px;
     position: relative;
     z-index: 1;
+}
+
+.r-overall-chart {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    border-radius: 16px;
+    padding: 20px;
+    margin-top: 20px;
+    position: relative;
+    z-index: 1;
+}
+
+.r-overall-chart h4 {
+    color: var(--text-primary);
+    font-size: 1rem;
+    margin: 0 0 15px 0;
+    text-align: center;
+}
+
+.r-overall-chart canvas {
+    height: 250px !important;
 }
 
 .r-history-stats {

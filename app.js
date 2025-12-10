@@ -3,6 +3,8 @@ let challenges = [];
 let payouts = [];
 let balanceHistory = {};
 let rEntries = [];
+let rOverallTotal = 0; // Track overall R across resets
+let rOverallHistory = []; // Track overall R progress over time
 
 const GOAL_AMOUNT = 50000;
 const R_GOAL = 20;
@@ -12,6 +14,7 @@ let payoutChart = null;
 let challengeDetailChart = null;
 let rMiniChart = null;
 let rHistoryChart = null;
+let rOverallChart = null;
 
 // Current challenge being viewed
 let currentChallengeId = null;
@@ -41,6 +44,8 @@ function saveData() {
     localStorage.setItem('payouts', JSON.stringify(payouts));
     localStorage.setItem('balanceHistory', JSON.stringify(balanceHistory));
     localStorage.setItem('rEntries', JSON.stringify(rEntries));
+    localStorage.setItem('rOverallTotal', rOverallTotal.toString());
+    localStorage.setItem('rOverallHistory', JSON.stringify(rOverallHistory));
 }
 
 function loadData() {
@@ -48,11 +53,15 @@ function loadData() {
     const savedPayouts = localStorage.getItem('payouts');
     const savedBalanceHistory = localStorage.getItem('balanceHistory');
     const savedREntries = localStorage.getItem('rEntries');
+    const savedROverallTotal = localStorage.getItem('rOverallTotal');
+    const savedROverallHistory = localStorage.getItem('rOverallHistory');
 
     if (savedChallenges) challenges = JSON.parse(savedChallenges);
     if (savedPayouts) payouts = JSON.parse(savedPayouts);
     if (savedBalanceHistory) balanceHistory = JSON.parse(savedBalanceHistory);
     if (savedREntries) rEntries = JSON.parse(savedREntries);
+    if (savedROverallTotal) rOverallTotal = parseFloat(savedROverallTotal);
+    if (savedROverallHistory) rOverallHistory = JSON.parse(savedROverallHistory);
 }
 
 function setDefaultDates() {
@@ -817,9 +826,11 @@ function exportData() {
         payouts,
         balanceHistory,
         rEntries,
+        rOverallTotal,
+        rOverallHistory,
         timerStartDate: localStorage.getItem('timerStartDate'),
         exportDate: new Date().toISOString(),
-        version: '1.5'
+        version: '1.6'
     };
 
     const dataStr = JSON.stringify(data, null, 2);
@@ -865,6 +876,8 @@ function importData(event) {
             payouts = data.payouts;
             balanceHistory = data.balanceHistory;
             rEntries = data.rEntries || [];
+            rOverallTotal = data.rOverallTotal || 0;
+            rOverallHistory = data.rOverallHistory || [];
 
             // Restore timer start date if it exists
             if (data.timerStartDate) {
@@ -910,6 +923,9 @@ function updateRTracker() {
     rCurrentElement.textContent = `${currentR.toFixed(1)}R`;
     rCurrentElement.className = currentR >= 0 ? 'r-current' : 'r-current negative';
 
+    // Update overall total display
+    document.getElementById('rOverallTotal').textContent = `${rOverallTotal.toFixed(1)}R`;
+
     // Update progress bar
     const rProgressBar = document.getElementById('rProgressBar');
     rProgressBar.style.width = `${progressCapped}%`;
@@ -920,6 +936,9 @@ function updateRTracker() {
 
     // Update mini chart
     updateRMiniChart();
+
+    // Update overall chart
+    updateROverallChart();
 }
 
 function updateRMiniChart() {
@@ -1003,6 +1022,69 @@ function updateRMiniChart() {
     rMiniChart.update();
 }
 
+function updateROverallChart() {
+    if (!rOverallChart) {
+        const ctx = document.getElementById('rOverallChart');
+        rOverallChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Overall Total R',
+                    data: [],
+                    borderColor: '#a855f7',
+                    backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#a855f7',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#94a3b8'
+                        },
+                        grid: {
+                            color: '#334155'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: '#94a3b8',
+                            maxRotation: 45,
+                            minRotation: 45
+                        },
+                        grid: {
+                            color: '#334155'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Update chart with overall history
+    const labels = rOverallHistory.map(entry => formatDate(entry.date));
+    const data = rOverallHistory.map(entry => entry.total);
+
+    rOverallChart.data.labels = labels;
+    rOverallChart.data.datasets[0].data = data;
+    rOverallChart.update();
+}
+
 function showAddRModal() {
     document.getElementById('rForm').reset();
     setDefaultDates();
@@ -1026,6 +1108,14 @@ function saveREntry(event) {
 
     rEntries.push(entry);
     rEntries.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // Update overall total and history
+    rOverallTotal += value;
+    rOverallHistory.push({
+        date: new Date().toISOString(),
+        total: rOverallTotal,
+        notes: `Added ${value}R`
+    });
 
     saveData();
     updateRTracker();
@@ -1177,6 +1267,17 @@ function renderREntries() {
 function deleteREntry(entryId) {
     if (!confirm('Are you sure you want to delete this R entry?')) return;
 
+    const deletedEntry = rEntries.find(e => e.id === entryId);
+    if (deletedEntry) {
+        // Update overall total by subtracting deleted entry
+        rOverallTotal -= parseFloat(deletedEntry.value);
+        rOverallHistory.push({
+            date: new Date().toISOString(),
+            total: rOverallTotal,
+            notes: `Removed ${deletedEntry.value}R`
+        });
+    }
+
     rEntries = rEntries.filter(e => e.id !== entryId);
     saveData();
     updateRTracker();
@@ -1186,14 +1287,17 @@ function deleteREntry(entryId) {
 }
 
 function resetRTracker() {
+    const currentR = calculateCurrentR();
+
     // Confirmation dialog to prevent accidental deletion
     const confirmReset = confirm(
         'Are you sure you want to reset the R-Multiple Tracker?\n\n' +
+        `Current R (${currentR.toFixed(1)}R) will be added to your Overall Total.\n\n` +
         'This will:\n' +
+        '- Add current R to Overall Total\n' +
         '- Clear all R entries and history\n' +
-        '- Reset progress to 0%\n' +
-        '- Delete all R-Multiple data\n\n' +
-        'This action cannot be undone!'
+        '- Reset current progress to 0%\n\n' +
+        'Overall Total will be preserved!'
     );
 
     if (!confirmReset) {
@@ -1203,12 +1307,22 @@ function resetRTracker() {
     // Double confirmation for extra safety
     const doubleConfirm = confirm(
         'FINAL CONFIRMATION\n\n' +
-        'You are about to permanently delete all R-Multiple tracking data.\n\n' +
+        `Adding ${currentR.toFixed(1)}R to Overall Total and resetting tracker.\n\n` +
         'Click OK to proceed with the reset, or Cancel to keep your data.'
     );
 
     if (!doubleConfirm) {
         return; // User cancelled on second confirmation
+    }
+
+    // Add current R to overall total (don't add if it's 0 or negative)
+    if (currentR > 0) {
+        rOverallTotal += currentR;
+        rOverallHistory.push({
+            date: new Date().toISOString(),
+            total: rOverallTotal,
+            notes: `Reset cycle: Added ${currentR.toFixed(1)}R`
+        });
     }
 
     // Clear all R entries
@@ -1225,7 +1339,7 @@ function resetRTracker() {
         closeModal('rHistoryModal');
     }
 
-    alert('R-Multiple Tracker has been reset successfully.');
+    alert(`R-Multiple Tracker has been reset successfully.\n\nOverall Total: ${rOverallTotal.toFixed(1)}R`);
 }
 
 // GitHub Gist Cloud Sync
@@ -1344,9 +1458,11 @@ async function syncToCloud() {
         payouts,
         balanceHistory,
         rEntries,
+        rOverallTotal,
+        rOverallHistory,
         timerStartDate: localStorage.getItem('timerStartDate'),
         syncDate: new Date().toISOString(),
-        version: '1.5'
+        version: '1.6'
     };
 
     try {
@@ -1607,6 +1723,8 @@ async function syncFromCloud() {
         payouts = data.payouts || [];
         balanceHistory = data.balanceHistory || {};
         rEntries = data.rEntries || [];
+        rOverallTotal = data.rOverallTotal || 0;
+        rOverallHistory = data.rOverallHistory || [];
 
         // Restore timer start date if it exists
         if (data.timerStartDate) {
