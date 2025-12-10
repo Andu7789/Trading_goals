@@ -346,6 +346,7 @@ function renderChallenges() {
         const profitSign = profit >= 0 ? '+' : '';
         const hasScalingClass = challenge.hasScaling ? 'has-scaling' : '';
         const scalingBadge = challenge.hasScaling ? `<span class="scaling-badge">📈 Scaling: ${challenge.scalingTarget}%</span>` : '';
+        const passedBadge = challenge.status === 'passed' ? `<span class="passed-badge">✓ Challenge Passed</span>` : '';
 
         return `
             <div class="challenge-card ${challenge.status} ${hasScalingClass}" onclick="showChallengeDetail('${challenge.id}')" style="cursor: pointer;">
@@ -357,6 +358,7 @@ function renderChallenges() {
                     <span class="challenge-status ${challenge.status}">${challenge.status}</span>
                 </div>
 
+                ${passedBadge}
                 ${scalingBadge}
 
                 <div class="challenge-balance">

@@ -606,6 +606,17 @@ body {
     box-shadow: var(--shadow-lg);
 }
 
+.challenge-card.passed {
+    border: 2px solid rgba(16, 185, 129, 0.6);
+    box-shadow: 0 0 25px rgba(16, 185, 129, 0.25);
+    background: linear-gradient(135deg, var(--card-bg) 0%, rgba(16, 185, 129, 0.05) 100%);
+}
+
+.challenge-card.passed:hover {
+    box-shadow: 0 0 35px rgba(16, 185, 129, 0.35);
+    transform: translateY(-3px);
+}
+
 .challenge-card.has-scaling {
     border: 2px solid rgba(59, 130, 246, 0.5);
     box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
@@ -628,6 +639,23 @@ body {
     display: flex;
     align-items: center;
     gap: 5px;
+}
+
+.passed-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.2) 100%);
+    border: 1px solid rgba(16, 185, 129, 0.5);
+    color: #10b981;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .challenge-header {
