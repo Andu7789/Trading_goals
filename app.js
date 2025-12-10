@@ -152,6 +152,7 @@ function showAddChallengeModal(challengeId = null) {
         }
     } else {
         title.textContent = 'Add Challenge Account';
+        document.getElementById('challengeId').value = ''; // Ensure ID is cleared for new challenges
         setDefaultDates();
     }
 
@@ -184,11 +185,14 @@ function saveChallengeAccount(event) {
     const status = document.getElementById('challengeStatus').value;
     const startDate = document.getElementById('startDate').value;
 
+    console.log('Saving challenge:', {id, name, status, isNew: !document.getElementById('challengeId').value});
+
     // Get scaling data
     const hasScaling = document.getElementById('hasScaling').checked;
     const scalingTarget = hasScaling ? parseFloat(document.getElementById('scalingTarget').value) : null;
 
     const existingIndex = challenges.findIndex(c => c.id === id);
+    console.log('Existing index:', existingIndex, 'ID to save:', id);
 
     const challenge = {
         id,
