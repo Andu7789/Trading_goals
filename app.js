@@ -252,6 +252,13 @@ function saveChallengeAccount(event) {
 
     saveData();
     updateDashboard();
+
+    // Reset filter to "All Accounts" to ensure the saved challenge is visible
+    const filterDropdown = document.getElementById('challengeFilterBy');
+    if (filterDropdown) {
+        filterDropdown.value = 'all';
+    }
+
     renderChallenges();
     renderScalingTable();
     closeModal('addChallengeModal');
