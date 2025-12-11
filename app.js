@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderChallenges();
     renderPayouts();
     renderScalingTable();
+    renderDailyTotals();
     setDefaultDates();
     updateSyncButtonState();
     startMidnightTimer();
@@ -454,6 +455,7 @@ function saveBalanceEntry(event) {
     saveData();
     updateDashboard();
     renderChallenges();
+    renderDailyTotals();
     closeModal('addBalanceModal');
 
     // Clear form
@@ -1982,6 +1984,109 @@ function renderScalingTable() {
                 </td>
             </tr>
         `;
+    }).join('');
+}
+
+// Daily Totals Table
+function renderDailyTotals() {
+    const thead = document.getElementById('dailyTotalsHeader');
+    const tbody = document.getElementById('dailyTotalsBody');
+
+    // Collect all balance entries from all challenges
+    const allEntries = [];
+    const challengeMap = {};
+
+    challenges.forEach(challenge => {
+        challengeMap[challenge.id] = challenge.name;
+        if (balanceHistory[challenge.id]) {
+            balanceHistory[challenge.id].forEach(entry => {
+                allEntries.push({
+                    challengeId: challenge.id,
+                    challengeName: challenge.name,
+                    date: entry.date,
+                    balance: parseFloat(entry.balance),
+                    notes: entry.notes
+                });
+            });
+        }
+    });
+
+    if (allEntries.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="100" class="empty-state">No balance entries recorded yet</td></tr>';
+        return;
+    }
+
+    // Group entries by date and calculate daily changes
+    const dailyData = {};
+    const challengeIds = [...new Set(allEntries.map(e => e.challengeId))];
+
+    allEntries.forEach(entry => {
+        if (!dailyData[entry.date]) {
+            dailyData[entry.date] = {};
+        }
+        dailyData[entry.date][entry.challengeId] = entry.balance;
+    });
+
+    // Calculate daily changes for each challenge
+    const dailyChanges = {};
+
+    challengeIds.forEach(challengeId => {
+        const entries = allEntries
+            .filter(e => e.challengeId === challengeId)
+            .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        for (let i = 0; i < entries.length; i++) {
+            const entry = entries[i];
+            const prevEntry = i > 0 ? entries[i - 1] : null;
+
+            if (!dailyChanges[entry.date]) {
+                dailyChanges[entry.date] = {};
+            }
+
+            if (prevEntry) {
+                dailyChanges[entry.date][challengeId] = entry.balance - prevEntry.balance;
+            } else {
+                // First entry - no change to show
+                dailyChanges[entry.date][challengeId] = 0;
+            }
+        }
+    });
+
+    // Build table header with challenge names
+    let headerHTML = '<tr><th>Date</th>';
+    challengeIds.forEach(challengeId => {
+        headerHTML += `<th>${challengeMap[challengeId]}</th>`;
+    });
+    headerHTML += '<th class="daily-total-column">Daily Total</th></tr>';
+    thead.innerHTML = headerHTML;
+
+    // Build table rows sorted by date (newest first)
+    const sortedDates = Object.keys(dailyChanges).sort((a, b) => new Date(b) - new Date(a));
+
+    tbody.innerHTML = sortedDates.map(date => {
+        let dailyTotal = 0;
+        let rowHTML = `<tr><td class="date-cell">${formatDate(date)}</td>`;
+
+        challengeIds.forEach(challengeId => {
+            const change = dailyChanges[date][challengeId] || 0;
+            dailyTotal += change;
+
+            const changeClass = change > 0 ? 'positive' : change < 0 ? 'negative' : '';
+            const changeSign = change > 0 ? '+' : '';
+
+            rowHTML += `<td class="change-cell ${changeClass}">
+                ${change !== 0 ? `${changeSign}£${formatNumber(Math.abs(change))}` : '-'}
+            </td>`;
+        });
+
+        const totalClass = dailyTotal > 0 ? 'positive' : dailyTotal < 0 ? 'negative' : '';
+        const totalSign = dailyTotal > 0 ? '+' : '';
+
+        rowHTML += `<td class="daily-total-cell ${totalClass}">
+            <strong>${totalSign}£${formatNumber(Math.abs(dailyTotal))}</strong>
+        </td></tr>`;
+
+        return rowHTML;
     }).join('');
 }
 

@@ -1479,4 +1479,101 @@ body {
     .chart-tab {
         white-space: nowrap;
     }
+
+    .daily-totals-container {
+        overflow-x: scroll;
+    }
+
+    .daily-totals-table {
+        min-width: 1000px;
+    }
+}
+
+/* Daily Totals Section */
+.daily-totals-section {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: var(--shadow);
+    margin-bottom: 30px;
+}
+
+.daily-totals-container {
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid var(--card-border);
+}
+
+.daily-totals-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--dark-bg);
+    min-width: 800px;
+}
+
+.daily-totals-table thead {
+    background: rgba(99, 102, 241, 0.1);
+    border-bottom: 2px solid var(--card-border);
+}
+
+.daily-totals-table th {
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+.daily-totals-table th:first-child {
+    text-align: left;
+    width: 120px;
+}
+
+.daily-totals-table .daily-total-column {
+    background: rgba(168, 85, 247, 0.2);
+    font-weight: 700;
+    text-align: right;
+    padding-right: 20px;
+}
+
+.daily-totals-table tbody tr {
+    border-bottom: 1px solid var(--card-border);
+    transition: background-color 0.2s;
+}
+
+.daily-totals-table tbody tr:hover {
+    background: rgba(99, 102, 241, 0.05);
+}
+
+.daily-totals-table td {
+    padding: 12px 15px;
+    color: var(--text-secondary);
+}
+
+.date-cell {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.change-cell {
+    text-align: right;
+    font-weight: 500;
+}
+
+.daily-total-cell {
+    text-align: right;
+    font-size: 1.1rem;
+    background: rgba(168, 85, 247, 0.05);
+    padding-right: 20px;
+}
+
+.change-cell.positive,
+.daily-total-cell.positive {
+    color: var(--success);
+}
+
+.change-cell.negative,
+.daily-total-cell.negative {
+    color: var(--danger-color);
 }
