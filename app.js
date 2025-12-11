@@ -1987,10 +1987,15 @@ function renderScalingTable() {
     }).join('');
 }
 
+// Daily Totals Table - Sorting state
+let dailyTotalsSortColumn = null;
+let dailyTotalsSortDescending = true; // Start with descending (high to low)
+
 // Daily Totals Table
 function renderDailyTotals() {
     const thead = document.getElementById('dailyTotalsHeader');
     const tbody = document.getElementById('dailyTotalsBody');
+    const limitSelect = document.getElementById('dailyTotalsLimit');
 
     // Collect all balance entries from all challenges
     const allEntries = [];
@@ -2017,9 +2022,6 @@ function renderDailyTotals() {
         tbody.innerHTML = '<tr><td colspan="100" class="empty-state">No balance entries recorded yet</td></tr>';
         return;
     }
-
-    console.log('All dates with entries:', Array.from(allDates).sort());
-    console.log('Total entries:', allEntries.length);
 
     // Group entries by date and calculate daily changes
     const dailyData = {};
@@ -2058,8 +2060,8 @@ function renderDailyTotals() {
     });
 
     // Build table header with challenge names (split long names onto two lines)
-    let headerHTML = '<tr><th>Date</th>';
-    challengeIds.forEach(challengeId => {
+    let headerHTML = '<tr><th class="sortable" onclick="sortDailyTotals(-1)">Date</th>';
+    challengeIds.forEach((challengeId, index) => {
         const name = challengeMap[challengeId];
         // Split name at space closest to middle for two-line display
         const words = name.split(' ');
@@ -2072,22 +2074,67 @@ function renderDailyTotals() {
             headerText = `${firstLine}<br>${secondLine}`;
         }
 
-        headerHTML += `<th>${headerText}</th>`;
+        // Add sortable class and sort indicator
+        const sortClass = dailyTotalsSortColumn === index ? (dailyTotalsSortDescending ? 'sorted-desc' : 'sorted-asc') : '';
+        headerHTML += `<th class="sortable ${sortClass}" onclick="sortDailyTotals(${index})">${headerText}</th>`;
     });
-    headerHTML += '<th class="daily-total-column">Daily<br>Total</th></tr>';
+
+    // Add Daily Total column
+    const totalSortClass = dailyTotalsSortColumn === challengeIds.length ? (dailyTotalsSortDescending ? 'sorted-desc' : 'sorted-asc') : '';
+    headerHTML += `<th class="daily-total-column sortable ${totalSortClass}" onclick="sortDailyTotals(${challengeIds.length})">Daily<br>Total</th></tr>`;
     thead.innerHTML = headerHTML;
 
-    // Build table rows sorted by date (newest first)
-    const sortedDates = Object.keys(dailyChanges).sort((a, b) => new Date(b) - new Date(a));
-
-    tbody.innerHTML = sortedDates.map(date => {
+    // Build array of row data for sorting
+    const rowData = Object.keys(dailyChanges).map(date => {
         let dailyTotal = 0;
-        let rowHTML = `<tr><td class="date-cell">${formatDate(date)}</td>`;
+        const changes = {};
 
         challengeIds.forEach(challengeId => {
             const change = dailyChanges[date][challengeId] || 0;
+            changes[challengeId] = change;
             dailyTotal += change;
+        });
 
+        return {
+            date,
+            changes,
+            dailyTotal
+        };
+    });
+
+    // Apply sorting
+    if (dailyTotalsSortColumn === null || dailyTotalsSortColumn === -1) {
+        // Sort by date
+        rowData.sort((a, b) => {
+            const dateA = new Date(a.date);
+            const dateB = new Date(b.date);
+            return dailyTotalsSortDescending ? dateB - dateA : dateA - dateB;
+        });
+    } else if (dailyTotalsSortColumn === challengeIds.length) {
+        // Sort by Daily Total
+        rowData.sort((a, b) => {
+            return dailyTotalsSortDescending ? b.dailyTotal - a.dailyTotal : a.dailyTotal - b.dailyTotal;
+        });
+    } else {
+        // Sort by specific challenge column
+        const challengeId = challengeIds[dailyTotalsSortColumn];
+        rowData.sort((a, b) => {
+            const changeA = a.changes[challengeId] || 0;
+            const changeB = b.changes[challengeId] || 0;
+            return dailyTotalsSortDescending ? changeB - changeA : changeA - changeB;
+        });
+    }
+
+    // Apply row limit
+    const limit = limitSelect.value === 'all' ? rowData.length : parseInt(limitSelect.value);
+    const limitedRows = rowData.slice(0, limit);
+
+    // Build table rows
+    tbody.innerHTML = limitedRows.map(row => {
+        let rowHTML = `<tr><td class="date-cell">${formatDate(row.date)}</td>`;
+
+        challengeIds.forEach(challengeId => {
+            const change = row.changes[challengeId] || 0;
             const changeClass = change > 0 ? 'positive' : change < 0 ? 'negative' : '';
             const changeSign = change > 0 ? '+' : '';
 
@@ -2096,15 +2143,29 @@ function renderDailyTotals() {
             </td>`;
         });
 
-        const totalClass = dailyTotal > 0 ? 'positive' : dailyTotal < 0 ? 'negative' : '';
-        const totalSign = dailyTotal > 0 ? '+' : '';
+        const totalClass = row.dailyTotal > 0 ? 'positive' : row.dailyTotal < 0 ? 'negative' : '';
+        const totalSign = row.dailyTotal > 0 ? '+' : '';
 
         rowHTML += `<td class="daily-total-cell ${totalClass}">
-            <strong>${totalSign}£${formatNumber(Math.abs(dailyTotal))}</strong>
+            <strong>${totalSign}£${formatNumber(Math.abs(row.dailyTotal))}</strong>
         </td></tr>`;
 
         return rowHTML;
     }).join('');
+}
+
+// Sort Daily Totals table by column
+function sortDailyTotals(columnIndex) {
+    // If clicking same column, toggle direction
+    if (dailyTotalsSortColumn === columnIndex) {
+        dailyTotalsSortDescending = !dailyTotalsSortDescending;
+    } else {
+        // New column - start with descending (high to low)
+        dailyTotalsSortColumn = columnIndex;
+        dailyTotalsSortDescending = true;
+    }
+
+    renderDailyTotals();
 }
 
 // Note: Modals only close via buttons or ESC key, not by clicking outside
