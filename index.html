@@ -113,7 +113,79 @@
             </div>
         </section>
 
-        <!-- Quick Stats Dashboard -->
+
+
+        
+
+        <!-- Daily Totals Section -->
+        <section class="daily-totals-section">
+            <div class="section-header">
+                <h3>Daily Performance by Challenge</h3>
+                <div class="daily-totals-controls">
+                    <label for="dailyTotalsLimit">Show rows:</label>
+                    <select id="dailyTotalsLimit" onchange="renderDailyTotals()">
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="30">30</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                        <option value="all">All</option>
+                    </select>
+                </div>
+            </div>
+            <div class="daily-totals-container">
+                <table class="daily-totals-table" id="dailyTotalsTable">
+                    <thead id="dailyTotalsHeader">
+                        <tr>
+                            <th>Date</th>
+                            <th class="daily-total-column">Daily Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dailyTotalsBody">
+                        <tr>
+                            <td colspan="2" class="empty-state">No balance entries recorded yet</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        
+
+        <!-- Challenge Accounts Section -->
+        <section class="challenges-section">
+            <div class="section-header">
+                <h2>Challenge Accounts</h2>
+                <div class="challenge-controls">
+                    <select id="challengeSortBy" onchange="renderChallenges()">
+                        <option value="name-asc">Name A-Z</option>
+                        <option value="name-desc">Name Z-A</option>
+                        <option value="balance-desc">Balance High-Low</option>
+                        <option value="balance-asc">Balance Low-High</option>
+                        <option value="percent-desc">Highest % Gain</option>
+                        <option value="percent-asc">Lowest % Gain</option>
+                        <option value="date-desc">Newest First</option>
+                        <option value="date-asc">Oldest First</option>
+                    </select>
+                    <select id="challengeFilterBy" onchange="renderChallenges()">
+                        <option value="all">All Accounts</option>
+                        <option value="active">Active Only</option>
+                        <option value="funded">Funded Only</option>
+                        <option value="passed">Passed Only</option>
+                        <option value="failed">Failed Only</option>
+                        <option value="scaling">Has Scaling</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="showAddChallengeModal()">+ Add Challenge</button>
+            </div>
+            <div class="challenges-grid" id="challengesGrid">
+                <div class="empty-state">
+                    <p>No challenges yet. Add your first challenge to start tracking!</p>
+                </div>
+            </div>
+        </section>
+
+                <!-- Quick Stats Dashboard -->
         <section class="stats-dashboard">
             <div class="stat-card">
                 <div class="stat-icon">📊</div>
@@ -142,14 +214,6 @@
                     <h3 id="successRate">0%</h3>
                     <p>Success Rate</p>
                 </div>
-            </div>
-        </section>
-
-        <!-- Payout Chart Section -->
-        <section class="chart-section-full">
-            <div class="chart-card-full">
-                <h3>Payout History</h3>
-                <canvas id="payoutChart"></canvas>
             </div>
         </section>
 
@@ -195,69 +259,11 @@
             </div>
         </section>
 
-        <!-- Daily Totals Section -->
-        <section class="daily-totals-section">
-            <div class="section-header">
-                <h3>Daily Performance by Challenge</h3>
-                <div class="daily-totals-controls">
-                    <label for="dailyTotalsLimit">Show rows:</label>
-                    <select id="dailyTotalsLimit" onchange="renderDailyTotals()">
-                        <option value="10">10</option>
-                        <option value="20">20</option>
-                        <option value="30">30</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                        <option value="all">All</option>
-                    </select>
-                </div>
-            </div>
-            <div class="daily-totals-container">
-                <table class="daily-totals-table" id="dailyTotalsTable">
-                    <thead id="dailyTotalsHeader">
-                        <tr>
-                            <th>Date</th>
-                            <th class="daily-total-column">Daily Total</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dailyTotalsBody">
-                        <tr>
-                            <td colspan="2" class="empty-state">No balance entries recorded yet</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- Challenge Accounts Section -->
-        <section class="challenges-section">
-            <div class="section-header">
-                <h2>Challenge Accounts</h2>
-                <div class="challenge-controls">
-                    <select id="challengeSortBy" onchange="renderChallenges()">
-                        <option value="name-asc">Name A-Z</option>
-                        <option value="name-desc">Name Z-A</option>
-                        <option value="balance-desc">Balance High-Low</option>
-                        <option value="balance-asc">Balance Low-High</option>
-                        <option value="percent-desc">Highest % Gain</option>
-                        <option value="percent-asc">Lowest % Gain</option>
-                        <option value="date-desc">Newest First</option>
-                        <option value="date-asc">Oldest First</option>
-                    </select>
-                    <select id="challengeFilterBy" onchange="renderChallenges()">
-                        <option value="all">All Accounts</option>
-                        <option value="active">Active Only</option>
-                        <option value="funded">Funded Only</option>
-                        <option value="passed">Passed Only</option>
-                        <option value="failed">Failed Only</option>
-                        <option value="scaling">Has Scaling</option>
-                    </select>
-                </div>
-                <button class="btn btn-primary" onclick="showAddChallengeModal()">+ Add Challenge</button>
-            </div>
-            <div class="challenges-grid" id="challengesGrid">
-                <div class="empty-state">
-                    <p>No challenges yet. Add your first challenge to start tracking!</p>
-                </div>
+        <!-- Payout Chart Section -->
+        <section class="chart-section-full">
+            <div class="chart-card-full">
+                <h3>Payout History</h3>
+                <canvas id="payoutChart"></canvas>
             </div>
         </section>
 

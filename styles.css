@@ -1499,6 +1499,38 @@ body {
     margin-bottom: 30px;
 }
 
+.daily-totals-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.daily-totals-controls label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.daily-totals-controls select {
+    background: var(--dark-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.daily-totals-controls select:hover {
+    border-color: var(--primary-color);
+}
+
+.daily-totals-controls select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
+}
+
 .daily-totals-container {
     overflow-x: auto;
     border-radius: 8px;
@@ -1527,6 +1559,31 @@ body {
     font-size: 0.85rem;
     min-width: 80px;
     max-width: 120px;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s;
+}
+
+.daily-totals-table th:hover {
+    background: rgba(99, 102, 241, 0.15);
+}
+
+.daily-totals-table th.sortable::after {
+    content: ' ↕';
+    opacity: 0.5;
+    font-size: 0.8rem;
+}
+
+.daily-totals-table th.sorted-asc::after {
+    content: ' ↑';
+    opacity: 1;
+    color: var(--primary-color);
+}
+
+.daily-totals-table th.sorted-desc::after {
+    content: ' ↓';
+    opacity: 1;
+    color: var(--primary-color);
 }
 
 .daily-totals-table th:first-child {
