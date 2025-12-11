@@ -1995,6 +1995,7 @@ function renderDailyTotals() {
     // Collect all balance entries from all challenges
     const allEntries = [];
     const challengeMap = {};
+    const allDates = new Set(); // Track all dates that have entries
 
     challenges.forEach(challenge => {
         challengeMap[challenge.id] = challenge.name;
@@ -2007,6 +2008,7 @@ function renderDailyTotals() {
                     balance: parseFloat(entry.balance),
                     notes: entry.notes
                 });
+                allDates.add(entry.date); // Track this date
             });
         }
     });
@@ -2015,6 +2017,9 @@ function renderDailyTotals() {
         tbody.innerHTML = '<tr><td colspan="100" class="empty-state">No balance entries recorded yet</td></tr>';
         return;
     }
+
+    console.log('All dates with entries:', Array.from(allDates).sort());
+    console.log('Total entries:', allEntries.length);
 
     // Group entries by date and calculate daily changes
     const dailyData = {};
