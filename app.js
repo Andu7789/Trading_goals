@@ -9,6 +9,10 @@ let rOverallHistory = []; // Track overall R progress over time
 const GOAL_AMOUNT = 50000;
 const R_GOAL = 20;
 
+// Data Protection - Track data fingerprint to detect unexpected loss
+let dataFingerprint = null;
+let autoSyncEnabled = false;
+
 // Charts
 let payoutChart = null;
 let challengeDetailChart = null;
@@ -27,6 +31,7 @@ let gistId = null;
 document.addEventListener('DOMContentLoaded', () => {
     loadData();
     loadGitHubConfig();
+    checkDataIntegrity(); // Check for unexpected data loss
     initCharts();
     updateDashboard();
     updateRTracker();
@@ -37,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setDefaultDates();
     updateSyncButtonState();
     startMidnightTimer();
+    checkAutoSyncStatus(); // Check if auto-sync should be enabled
 });
 
 // Local Storage Management
@@ -69,6 +75,112 @@ function loadData() {
         const currentR = rEntries.reduce((sum, entry) => sum + parseFloat(entry.value), 0);
         rOverallTotal = currentR;
         saveData();
+    }
+
+    // Store initial data fingerprint
+    updateDataFingerprint();
+}
+
+// Data Protection: Create fingerprint of current data
+function generateDataFingerprint() {
+    return {
+        challengeCount: challenges.length,
+        payoutCount: payouts.length,
+        rEntryCount: rEntries.length,
+        rOverallTotal: rOverallTotal,
+        hasBalanceHistory: Object.keys(balanceHistory).length > 0,
+        timestamp: Date.now()
+    };
+}
+
+function updateDataFingerprint() {
+    dataFingerprint = generateDataFingerprint();
+    localStorage.setItem('dataFingerprint', JSON.stringify(dataFingerprint));
+}
+
+// Check for unexpected data loss
+function checkDataIntegrity() {
+    const savedFingerprint = localStorage.getItem('dataFingerprint');
+
+    if (!savedFingerprint) {
+        // First time running, store fingerprint
+        updateDataFingerprint();
+        return;
+    }
+
+    const lastFingerprint = JSON.parse(savedFingerprint);
+    const currentFingerprint = generateDataFingerprint();
+
+    // Check if we had data before but it's now missing
+    const hadData = lastFingerprint.challengeCount > 0 ||
+                    lastFingerprint.payoutCount > 0 ||
+                    lastFingerprint.rEntryCount > 0;
+
+    const hasNoData = currentFingerprint.challengeCount === 0 &&
+                      currentFingerprint.payoutCount === 0 &&
+                      currentFingerprint.rEntryCount === 0;
+
+    if (hadData && hasNoData) {
+        // Data loss detected!
+        const lastUpdate = new Date(lastFingerprint.timestamp).toLocaleString();
+        alert(`⚠️ DATA LOSS DETECTED!\n\nYour data from ${lastUpdate} is missing.\n\nLast known data:\n- ${lastFingerprint.challengeCount} challenges\n- ${lastFingerprint.payoutCount} payouts\n- ${lastFingerprint.rEntryCount} R entries\n\nPlease restore from:\n1. Import your latest backup file (Export/Import menu)\n2. Pull from GitHub Cloud (if you have sync enabled)\n\nTip: Enable Auto-Sync in the Sync menu to prevent future data loss.`);
+    }
+}
+
+// Auto-Sync Feature
+function checkAutoSyncStatus() {
+    const autoSyncSetting = localStorage.getItem('autoSyncEnabled');
+    autoSyncEnabled = autoSyncSetting === 'true';
+    updateAutoSyncUI();
+}
+
+function toggleAutoSync() {
+    if (!githubToken || !gistId) {
+        alert('⚠️ Please setup GitHub sync first!\n\nGo to the Sync menu and click "Setup GitHub Sync" to connect your account.');
+        return;
+    }
+
+    autoSyncEnabled = !autoSyncEnabled;
+    localStorage.setItem('autoSyncEnabled', autoSyncEnabled.toString());
+    updateAutoSyncUI();
+
+    if (autoSyncEnabled) {
+        alert('✅ Auto-Sync Enabled!\n\nYour data will automatically backup to GitHub Cloud whenever you make changes.\n\nThis protects you from data loss.');
+        // Immediately sync current data
+        syncToCloud();
+    } else {
+        alert('Auto-Sync Disabled\n\nYou will need to manually push to cloud to backup your data.');
+    }
+}
+
+function updateAutoSyncUI() {
+    const checkbox = document.getElementById('autoSyncCheckbox');
+    if (checkbox) {
+        checkbox.checked = autoSyncEnabled;
+    }
+}
+
+// Enhanced saveData to trigger auto-sync
+const originalSaveData = saveData;
+function saveData() {
+    // Call original save
+    localStorage.setItem('challenges', JSON.stringify(challenges));
+    localStorage.setItem('payouts', JSON.stringify(payouts));
+    localStorage.setItem('balanceHistory', JSON.stringify(balanceHistory));
+    localStorage.setItem('rEntries', JSON.stringify(rEntries));
+    localStorage.setItem('rOverallTotal', rOverallTotal.toString());
+    localStorage.setItem('rOverallHistory', JSON.stringify(rOverallHistory));
+
+    // Update fingerprint
+    updateDataFingerprint();
+
+    // Auto-sync if enabled
+    if (autoSyncEnabled && githubToken && gistId) {
+        // Debounce the sync to avoid too many API calls
+        clearTimeout(window.autoSyncTimeout);
+        window.autoSyncTimeout = setTimeout(() => {
+            syncToCloud(true); // Pass true for silent mode
+        }, 2000); // Wait 2 seconds after last change
     }
 }
 
@@ -1469,13 +1581,17 @@ function updateSyncButtonState() {
     }
 }
 
-async function syncToCloud() {
+async function syncToCloud(silentMode = false) {
     if (!githubToken) {
-        alert('Please setup GitHub sync first');
+        if (!silentMode) {
+            alert('Please setup GitHub sync first');
+        }
         return;
     }
 
-    toggleSyncMenu();
+    if (!silentMode) {
+        toggleSyncMenu();
+    }
 
     const data = {
         challenges,
@@ -1538,7 +1654,11 @@ async function syncToCloud() {
             const result = await response.json();
             console.log('Gist updated successfully:', result.updated_at);
 
-            alert(`✅ Data synced to cloud successfully!\n\nSynced:\n- ${data.challenges.length} challenges\n- ${data.payouts.length} payouts\n- ${data.rEntries.length} R entries\n\n📋 Gist ID: ${gistId.substring(0, 8)}...`);
+            if (!silentMode) {
+                alert(`✅ Data synced to cloud successfully!\n\nSynced:\n- ${data.challenges.length} challenges\n- ${data.payouts.length} payouts\n- ${data.rEntries.length} R entries\n\n📋 Gist ID: ${gistId.substring(0, 8)}...`);
+            } else {
+                console.log('Auto-sync completed silently');
+            }
         } else {
             // Create new gist
             const requestBody = {
@@ -1590,11 +1710,17 @@ async function syncToCloud() {
             gistId = result.id;
             saveGitHubConfig();
 
-            alert(`✅ Data synced to cloud successfully!\n\nYour data is now backed up to a private GitHub Gist.\n\n📋 Gist ID: ${gistId.substring(0, 8)}...\n\n⚠️ Important: Use "Pull from Cloud" on your other devices to sync this data.`);
+            if (!silentMode) {
+                alert(`✅ Data synced to cloud successfully!\n\nYour data is now backed up to a private GitHub Gist.\n\n📋 Gist ID: ${gistId.substring(0, 8)}...\n\n⚠️ Important: Use "Pull from Cloud" on your other devices to sync this data.`);
+            } else {
+                console.log('Auto-sync completed silently (new gist created)');
+            }
         }
     } catch (error) {
         console.error('Sync error:', error);
-        alert('❌ Failed to sync data: ' + error.message + '\n\nPlease check your GitHub token and try again.');
+        if (!silentMode) {
+            alert('❌ Failed to sync data: ' + error.message + '\n\nPlease check your GitHub token and try again.');
+        }
     }
 }
 

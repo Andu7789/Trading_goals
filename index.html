@@ -34,6 +34,12 @@
                         <button class="sync-menu-item" onclick="showGitHubSetup()">⚙️ Setup GitHub Sync</button>
                         <button class="sync-menu-item" onclick="syncToCloud()" id="syncToCloudBtn" disabled>↑ Push to Cloud</button>
                         <button class="sync-menu-item" onclick="syncFromCloud()" id="syncFromCloudBtn" disabled>↓ Pull from Cloud</button>
+                        <div class="sync-menu-item" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px;">
+                            <label for="autoSyncCheckbox" style="cursor: pointer; margin: 0; display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" id="autoSyncCheckbox" onclick="toggleAutoSync()" style="cursor: pointer;">
+                                <span>🔄 Auto-Sync</span>
+                            </label>
+                        </div>
                         <button class="sync-menu-item" onclick="disconnectGitHub()" id="disconnectBtn" disabled>🔌 Disconnect</button>
                     </div>
                 </div>
@@ -193,6 +199,17 @@
         <section class="daily-totals-section">
             <div class="section-header">
                 <h3>Daily Performance by Challenge</h3>
+                <div class="daily-totals-controls">
+                    <label for="dailyTotalsLimit">Show rows:</label>
+                    <select id="dailyTotalsLimit" onchange="renderDailyTotals()">
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="30">30</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                        <option value="all">All</option>
+                    </select>
+                </div>
             </div>
             <div class="daily-totals-container">
                 <table class="daily-totals-table" id="dailyTotalsTable">
