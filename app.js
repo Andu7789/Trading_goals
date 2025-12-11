@@ -2052,12 +2052,24 @@ function renderDailyTotals() {
         }
     });
 
-    // Build table header with challenge names
+    // Build table header with challenge names (split long names onto two lines)
     let headerHTML = '<tr><th>Date</th>';
     challengeIds.forEach(challengeId => {
-        headerHTML += `<th>${challengeMap[challengeId]}</th>`;
+        const name = challengeMap[challengeId];
+        // Split name at space closest to middle for two-line display
+        const words = name.split(' ');
+        let headerText = name;
+
+        if (words.length > 1) {
+            const midPoint = Math.ceil(words.length / 2);
+            const firstLine = words.slice(0, midPoint).join(' ');
+            const secondLine = words.slice(midPoint).join(' ');
+            headerText = `${firstLine}<br>${secondLine}`;
+        }
+
+        headerHTML += `<th>${headerText}</th>`;
     });
-    headerHTML += '<th class="daily-total-column">Daily Total</th></tr>';
+    headerHTML += '<th class="daily-total-column">Daily<br>Total</th></tr>';
     thead.innerHTML = headerHTML;
 
     // Build table rows sorted by date (newest first)
