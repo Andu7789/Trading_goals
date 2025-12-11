@@ -70,10 +70,11 @@ function loadData() {
     if (savedROverallTotal) rOverallTotal = parseFloat(savedROverallTotal);
     if (savedROverallHistory) rOverallHistory = JSON.parse(savedROverallHistory);
 
-    // Initialize overall total from existing R entries if not set
-    if (!savedROverallTotal && rEntries.length > 0) {
-        const currentR = rEntries.reduce((sum, entry) => sum + parseFloat(entry.value), 0);
+    // Initialize overall total from existing R entries if not set OR if it's 0 but we have entries
+    const currentR = rEntries.reduce((sum, entry) => sum + parseFloat(entry.value), 0);
+    if ((!savedROverallTotal || rOverallTotal === 0) && currentR > 0) {
         rOverallTotal = currentR;
+        console.log(`Initialized rOverallTotal to ${rOverallTotal}R from current R entries`);
         saveData();
     }
 
