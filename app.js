@@ -6,8 +6,8 @@ let rEntries = [];
 let rOverallTotal = 0; // Track overall R across resets
 let rOverallHistory = []; // Track overall R progress over time
 
-const GOAL_AMOUNT = 50000;
-const R_GOAL = 20;
+const GOAL_AMOUNT = 30000;
+const R_GOAL = 15;
 
 // Data Protection - Track data fingerprint to detect unexpected loss
 let dataFingerprint = null;
