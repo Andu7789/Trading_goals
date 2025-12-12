@@ -78,6 +78,28 @@ function loadData() {
         saveData();
     }
 
+    // ONE-TIME FIX: Detect and fix double-counting bug (remove this after fix is applied)
+    const doubleCountingFixed = localStorage.getItem('doubleCountingFixed');
+    if (!doubleCountingFixed && currentR === 0 && rOverallTotal > 0) {
+        // If no current entries but we have an overall total, it might be doubled
+        // Check if it looks like it was doubled (user reported 16.6R when it should be 8.3R)
+        const lastResetEntry = rOverallHistory[rOverallHistory.length - 1];
+        if (lastResetEntry && lastResetEntry.notes && lastResetEntry.notes.includes('Reset cycle')) {
+            // Extract the R value from the notes (e.g., "Reset cycle: Added 8.3R")
+            const match = lastResetEntry.notes.match(/Added ([\d.]+)R/);
+            if (match) {
+                const addedR = parseFloat(match[1]);
+                // If overall total is roughly double the last added amount, fix it
+                if (Math.abs(rOverallTotal - (addedR * 2)) < 0.1) {
+                    console.log(`Fixing double-counting: ${rOverallTotal}R → ${addedR}R`);
+                    rOverallTotal = addedR;
+                    localStorage.setItem('doubleCountingFixed', 'true');
+                    saveData();
+                }
+            }
+        }
+    }
+
     // Store initial data fingerprint
     updateDataFingerprint();
 }
@@ -1256,8 +1278,8 @@ function saveREntry(event) {
     rEntries.push(entry);
     rEntries.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    // Update overall total
-    rOverallTotal += value;
+    // Note: rOverallTotal is only updated when resetting the tracker, not when adding entries
+    // This prevents double-counting
 
     saveData();
     updateRTracker();
@@ -1409,11 +1431,8 @@ function renderREntries() {
 function deleteREntry(entryId) {
     if (!confirm('Are you sure you want to delete this R entry?')) return;
 
-    const deletedEntry = rEntries.find(e => e.id === entryId);
-    if (deletedEntry) {
-        // Update overall total by subtracting deleted entry
-        rOverallTotal -= parseFloat(deletedEntry.value);
-    }
+    // Note: rOverallTotal is only updated during reset, not when adding/deleting entries
+    // This prevents double-counting issues
 
     rEntries = rEntries.filter(e => e.id !== entryId);
     saveData();
