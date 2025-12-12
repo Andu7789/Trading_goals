@@ -1587,7 +1587,7 @@ body {
 }
 
 .daily-totals-table th:first-child {
-    text-align: left;
+    text-align: center;
     width: 100px;
     min-width: 100px;
     padding-left: 15px;
@@ -1596,7 +1596,7 @@ body {
 .daily-totals-table .daily-total-column {
     background: rgba(168, 85, 247, 0.2);
     font-weight: 700;
-    text-align: right;
+    text-align: center;
     padding-right: 20px;
 }
 
